@@ -1,0 +1,11 @@
+{
+  "extends": "@fdebijl/tsconfig",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+	},
+  "exclude": [
+    "tsbp.setup.ts",
+    "boilerplate/**/*.ts"
+  ]
+}
