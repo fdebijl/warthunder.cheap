@@ -1,0 +1,74 @@
+version: "3.7"
+
+services:
+  website:
+    image: fdebijl/warthunder.cheap:latest-website
+    networks:
+      - traefik-public
+    deploy:
+      mode: replicated
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      placement:
+        constraints: [node.role != manager]
+      labels:
+        - "traefik.http.routers.wtcheap_website_insecure.rule=Host(`warthunder.cheap`)"
+        - "traefik.http.routers.wtcheap_website_insecure.middlewares=redirectToTLS@file"
+        - "traefik.http.routers.wtcheap_website_insecure.entrypoints=web"
+        - "traefik.http.routers.wtcheap_website.rule=Host(`warthunder.cheap`)"
+        - "traefik.http.routers.wtcheap_website.entrypoints=websecure"
+        - "traefik.http.routers.wtcheap_website.tls=true"
+        - "traefik.http.routers.wtcheap_website.tls.certresolver=transipResolver"
+        - "traefik.http.services.wtcheap_website.loadbalancer.server.port=80"
+        - "traefik.enable=true"
+    environment:
+      - API_URL=https://warthunder.cheap/api/v1
+  api:
+    image: fdebijl/warthunder.cheap:latest-api
+    networks:
+      - traefik-public
+    deploy:
+      mode: replicated
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      placement:
+        constraints: [node.role != manager]
+      labels:
+        - "traefik.http.routers.wtcheap_api_insecure.rule=Host(`warthunder.cheap`) && PathPrefix(`/api/v1`)"
+        - "traefik.http.routers.wtcheap_api_insecure.middlewares=redirectToTLS@file"
+        - "traefik.http.routers.wtcheap_api_insecure.entrypoints=web"
+        - "traefik.http.routers.wtcheap_api.rule=Host(`warthunder.cheap`) && PathPrefix(`/api/v1`)"
+        - "traefik.http.routers.wtcheap_api.entrypoints=websecure"
+        - "traefik.http.routers.wtcheap_api.tls=true"
+        - "traefik.http.routers.wtcheap_api.tls.certresolver=transipResolver"
+        - "traefik.http.services.wtcheap_api.loadbalancer.server.port=3000"
+        - "traefik.enable=true"
+    environment:
+      - MONGODB_URI=mongodb://127.0.0.1:27017
+      - PORT=3000
+  scraper:
+    image: fdebijl/warthunder.cheap:latest-scraper
+    networks:
+      - traefik-public
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role != manager]
+    environment:
+      - MONGODB_URI=mongodb://127.0.0.1:27017
+      - MAILGUN_API_KEY=aaaa-bbbb-cccc-dddd
+      - MAILGUN_DOMAIN=mail.example.com
+      - MAILGUN_SENDER=noreply@example.com
+
+networks:
+  traefik-public:
+    external: true

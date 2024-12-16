@@ -1,6 +1,21 @@
-# TypeScript BoilerPlate
-A small boilerplate I use for personal TS projects 📝
+# [Warthunder.cheap](https://warthunder.cheap)
 
-Go [here](https://github.com/Fdebijl/tsbp/generate) to generate a new repo based on this boilerplate, or click the 'Use this template' button above.
+WarThunder.Cheap is a web application that tracks item prices, discounts, and availability in the War Thunder store. It allows users to sign up for alerts on specific items to be notified via email when:
 
-Once you've cloned or downloaded the repo, simply run `npm run setup` to setup the project.
+- An item is discounted
+- An item is back in stock
+- New items are added
+
+The system consists of three main components:
+
+1. **Scraper:** Periodically scrapes the War Thunder store using puppeteer to update price and item information.
+2. **API:** Exposes the scraped data and manages user alerts.
+3. **Website:** The interface for browsing item data and managing alerts.
+
+## License
+This project is licensed under the MIT License. See the `LICENSE` file for more details.
+
+## Acknowledgments
+- [Mailgun](https://www.mailgun.com/) for email notifications.
+- [Chart.js](https://www.chartjs.org/) for data visualization.
+- [LazySizes.js](https://github.com/aFarkas/lazysizes) for image optimization.

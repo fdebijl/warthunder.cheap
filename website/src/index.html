@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warthunder.cheap | Warthunder Discount & Price alerts</title>
+  <meta name="description" content="Warthunder.cheap tracks prices and availability for items on the War Thunder store. You can sign up to get alerts when items go on sale or when discontinued items are back in stock.">
+
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/utils.css">
+  <link rel="stylesheet" href="css/components.css">
+
+  <script src="js/lib/lazysizes.min.js"></script>
+  <script src="js/wtcheap.js" type="module"></script>
+  <script src="js/lib/chart.js" async></script>
+
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="WT.Cheap" />
+  <link rel="manifest" href="/site.webmanifest" />
+</head>
+<body>
+
+  <header>
+    <div class="row center">
+      <img src="img/logo.svg" alt="Warthunder.cheap logo">
+      <div class="col">
+        <h1>Warthunder.cheap</h1>
+        <h2>War Thunder Store Tracker, Alerts & Archive</h2>
+      </div>
+    </div>
+    <aside>
+      <span>
+        <label for="referal_code">Referal Code</label>
+        <select name="referal_code" id="referal_code">
+          <option value="">None</option>
+        </select>
+      </span>
+
+      <p>Using a referal code will give you a 3% discount and a decal,
+        as well as giving a small kickback to the creator you selected.</p>
+
+      <hr>
+
+      <a href="#" class="dialog_open hidden" data-dialog-id="alerts">Manage alerts</a>
+      <a href="#" class="dialog_open" data-dialog-id="about">About Warthunder.cheap</a>
+      <a href="#" class="dialog_open" data-dialog-id="faq">FAQ</a>
+    </aside>
+    <div class="bg"></div>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="#" class="navtab active" data-filter-category="All">All</a></li>
+      <li><a href="#" class="navtab" data-filter-category="WarThunderPacks">Vehicles</a></li>
+      <li><a href="#" class="navtab" data-filter-category="GoldenEagles">Golden Eagles</a></li>
+      <li><a href="#" class="navtab" data-filter-category="PremiumAccount">Premium Account</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <section class="itemcategory current">
+      <h1 class="itemgrid__header">Current Items</h1>
+      <h4 class="itemgrid__subheader">Items currently available in the War Thunder store.</h4>
+      <div class="itemgrid">
+        <!-- itemRenderer injects items here -->
+      </div>
+    </section>
+
+    <section class="itemcategory archived">
+      <h1 class="itemgrid__header">Unavailable Items</h1>
+      <h4 class="itemgrid__subheader">Items previously available in the War Thunder store. Note that this is not an exhaustive list.</h4>
+      <div class="itemgrid">
+        <!-- itemRenderer injects items here -->
+      </div>
+    </section>
+  </main>
+
+  <dialog id="about">
+    <div class="dialog__wrapper">
+      <h1>About Warthunder.cheap</h1>
+      <p class="margin-top-sm">
+        This website checks the War Thunder store every 12 hours and records all the prices for each item. If an item is on sale it will appear at the top of this page, showing the discount over the normal price.
+        Clicking on 'View Details' will show you more information about the item, including a description, screenshots and price history graph. If you wish to support a creator and get a 3% discount for doing so, you can select a referal code in the header.
+        <br><br>
+        Further down the page you'll see all the items that are no longer available, but you can still view their details and price history. For any item, both current and archived, you can set alerts for availability or a discount.
+        <br><br>
+        If an alert triggers you'll receive an email with a link to the item on the War Thunder store. These alerts are one-time, so you'll only receive a single alert when the item goes on sale, after the alert email is sent we remove your email from the database.
+        If you wish to receive the same alert again, you'll have to set it up again here.
+        <br><br>
+        Warthunder.cheap is fully open source, you can view the source code on <a href="https://github.com/fdebijl/warthunder.cheap" target="_blank">Github</a>.
+      </p>
+
+      <div class="center">
+        <button class="dialog_close fab" data-dialog-id="about">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="faq">
+    <div class="dialog__wrapper">
+      <h1>FAQ</h1>
+      <h4 class="muted">Frequently Anticipated Questions I guess</h4>
+
+      <p class="qa">
+        <span class="q">When is the next sale?</span>
+        <span class="a">The War Thunder store typically has sales around the following dates, but individual vehicles can go on sale outside of these events.
+          <ul>
+            <li>VE day/Victory Day/Victory in Europe day (~6th of May)</li>
+            <li>D-Day (~6th of June)</li>
+            <li>Summer Sale (Late June, early July)</li>
+            <li>War Thunder Anniversary (Late October)</li>
+            <li>Black Friday (Late November, on Black Friday)</li>
+            <li>Christmas/New Year's Sale (Late December)</li>
+          </ul>
+          Shoutout to <a href="https://www.reddit.com/r/Warthunder/comments/1doy8cj/war_thunder_calendar_of_sales_2024_2/" target="_blank">/u/PureRushPwneD</a> for compiling this list.
+        </span>
+      </p>
+
+      <p class="qa">
+        <span class="q">Can I see the prices in USD?</span>
+        <span class="a">As of 2025, USD and EUR prices in the War Thunder store are the same, so an item that's 60 euros will also be 60 dollars.</span>
+      </p>
+
+      <p class="qa">
+        <span class="q">I changed the referal code but it still shows the previous one on the store</span>
+        <span class="a">Referal codes in the Gaijin Store are cached for an hour through cookies, clear your cookies and you should be able to select a new referal code.</span>
+      </p>
+
+      <p class="qa">
+        <span class="q">Do you make any money off this website?</span>
+        <span class="a">Nah, I just do it for the love of the game. But if you work at Gaijin and want to hook me up with a referal code of my own I would love you very much.</span>
+      </p>
+
+      <p class="qa">
+        <span class="q">I have a question/suggestion/comment/lawsuit/love letter</span>
+        <span class="a">Hit me up at <a href="mailto:wtcheap@debijl.xyz">wtcheap@debijl.xyz</a> or on <a href="https://github.com/fdebijl/warthunder.cheap">Github</a></span>
+      </p>
+
+      <div class="center">
+        <button class="dialog_close fab" data-dialog-id="faq">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="details">
+    <div class="dialog__wrapper">
+    </div>
+  </dialog>
+
+  <dialog id="alerts">
+    <div class="dialog__wrapper">
+      Coming soon :)
+    </div>
+  </dialog>
+
+  <footer>
+    <p>Warthunder.cheap, made by <a href="https://bsky.app/profile/fdebijl.nl" target="_blank" rel="noopener">@fdebijl</a>. No affiliation with Gaijin Entertainment.</p>
+  </footer>
+</body>
+</html>

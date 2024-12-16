@@ -1,0 +1,10 @@
+{
+  "extends": "@fdebijl/tsconfig",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+	},
+  "exclude": [
+    "dist/"
+  ]
+}
