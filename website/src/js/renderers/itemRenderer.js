@@ -98,7 +98,7 @@ export class ItemRenderer {
     const actionDiv = document.createElement('div');
     actionDiv.classList.add('item__actions');
     const storeButton = document.createElement('button');
-    storeButton.classList.add('item__store');
+    storeButton.classList.add('item__store', 'button', 'primary');
     storeButton.textContent = 'Buy';
 
     storeButton.addEventListener('click', () => {
@@ -113,7 +113,7 @@ export class ItemRenderer {
     });
 
     const detailsButton = document.createElement('button');
-    detailsButton.classList.add('item__details');
+    detailsButton.classList.add('item__details', 'button', 'secondary');
     detailsButton.textContent = 'View Details';
 
     detailsButton.addEventListener('click', () => {

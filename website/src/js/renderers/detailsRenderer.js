@@ -147,7 +147,7 @@ export class DetailsRenderer extends EventTarget {
 
       buyButton.href = link;
       buyButton.target = '_blank';
-      buyButton.classList.add('details__action', 'fab');
+      buyButton.classList.add('details__action', 'fab', 'primary');
       buyButton.textContent = 'Buy';
       actionsLeftBuy.appendChild(buyButton);
       infoLeft.appendChild(actionsLeftBuy);
@@ -164,7 +164,7 @@ export class DetailsRenderer extends EventTarget {
 
     const alertButton = document.createElement('a');
     alertButton.href = '#';
-    alertButton.classList.add('details__action', 'jab');
+    alertButton.classList.add('details__action', 'jab', 'secondary');
     alertButton.textContent = data.buyable ? 'Alert me on discount' : 'Alert me when available';
 
     alertButton.addEventListener('click', (e) => {

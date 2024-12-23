@@ -342,6 +342,30 @@ dialog#details .details__wrapper {
   border-right-width: 0px;
 }
 
+.button.primary,
+.fab.primary,
+.jab.primary {
+  background: hsl(10, 70%, 40%);
+}
+
+.button.primary:hover,
+.fab.primary:hover,
+.jab.primary:hover {
+  background: hsl(10, 75%, 30%);
+}
+
+.button.secondary,
+.fab.secondary,
+.jab.secondary {
+  background: hsl(213, 30%, 30%);
+}
+
+.button.secondary:hover,
+.fab.secondary:hover,
+.jab.secondary:hover {
+  background: hsl(213, 30%, 20%);
+}
+
 .qa {
   display: flex;
   flex-flow: column nowrap;

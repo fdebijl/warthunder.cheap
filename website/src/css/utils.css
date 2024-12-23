@@ -247,3 +247,13 @@ select option {
 .gap-md {
   gap: 2rem;
 }
+
+.fadeloading {
+  opacity: 0;
+  transition: all 1s;
+}
+
+.fadeloaded {
+  opacity: 1;
+  transition: all 1s;
+}

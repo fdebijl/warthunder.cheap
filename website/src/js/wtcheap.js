@@ -49,6 +49,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadModals();
   loadHeader();
+
+  document.querySelectorAll('.fadeloading').forEach((element) => {
+    element.classList.remove('fadeloading');
+    element.classList.add('fadeloaded');
+  });
 });
 
 document.querySelectorAll('.navtab').forEach((tab) => {
