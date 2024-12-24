@@ -1,5 +1,8 @@
 Todo:
 - Website
+  - Toasts
+  - Search
+  - Filtering
   - SEO
   - Alert Management
   - analytics.floris.amsterdam hookup?
@@ -12,5 +15,3 @@ Todo:
   - Add readmes
   - Add other markdown files such as security/contributing for github purposes
   - Organize the repo (sidebar/tabs/settings)
-  - Squash master
-  - Make the repo public
