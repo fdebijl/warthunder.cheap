@@ -3,7 +3,7 @@ import { EventType } from '../../domain';
 const HUMAN_READABLE_EVENT_TYPES = {
   'priceChange': 'discount alert for this item',
   'itemAvailable': 'availability alert for this item',
-  'newItem': 'alert for new items in the War Thunder store'
+  'newItem': 'alert for new items in the store'
 }
 
 export const generateHeader = (format: 'text' | 'html'): string => {

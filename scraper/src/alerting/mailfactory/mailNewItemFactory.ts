@@ -1,31 +1,50 @@
-import { clog } from '../../index';
+import { deleteAlert } from '../../db';
 import { Alert, Item, Mail, MailFactory } from '../../domain';
+import { sendEmail } from '../../mailgun';
+import { generateFooter, generateHeader } from './templates';
 
-// TODO: Implement
 export class MailNewItemFactory implements MailFactory {
   private alert;
-  private item;
+  private items: Item[];
   private mail: Partial<Mail> = {};
 
-  constructor(alert: Alert, item?: Item | Item[]) {
+  constructor(alert: Alert, items: Item[]) {
     this.alert = alert;
-    this.item = item;
+    this.items = items;
 
     this.mail.to = alert.recipient;
   }
 
   async generate(): Promise<MailFactory> {
-    clog.log('Generating newitem email');
+    this.mail.subject = `${this.items.length} new items are now available in the War Thunder store`;
+
+    this.mail.html = generateHeader('html');
+    this.mail.html +=
+    '<p>' +
+      `The following ${this.items.length > 1 ? 'items' : 'item'} are now available in the War Thunder store:\n` +
+      '<ul>' +
+        this.items.map((item) => `<li><a href="${item.resolvedHref}" target="_blank" rel="noopener">${item.title}</a></li>`).join('\n') +
+      '</ul>'
+    '</p>';
+    this.mail.html += generateFooter('newItem', 'html');
+
+    this.mail.text = generateHeader('text');
+    this.mail.text += `The following ${this.items.length > 1 ? 'items' : 'item'} are now available in the War Thunder store:\n` +
+    this.items.map((item) => ` - ${item.title} (${item.resolvedHref})`).join('\n');
+    this.mail.text += generateFooter('newItem', 'text');
+
     return this;
   }
 
   async send(): Promise<MailFactory> {
-    clog.log('Sending newitem email');
+    await sendEmail(this.mail as Mail);
+
     return this;
   }
 
   async cleanup(): Promise<MailFactory> {
-    clog.log('Cleaning up newitem email');
+    await deleteAlert(this.alert._id!);
+
     return this;
   }
 }
