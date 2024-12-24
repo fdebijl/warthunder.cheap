@@ -1,12 +1,10 @@
 import puppeteer, { Page } from 'puppeteer';
-import { milliseconds } from '@fdebijl/pog';
 
 import { Item } from '../domain';
 import { PERMA_SALE_ITEM_IDS, SELECTORS } from '../constants';
 import { clog } from '../index';
 import { LOGLEVEL } from '@fdebijl/clog';
 import { isItemBuyable } from './isItemBuyable';
-import { time } from 'console';
 
 export const deepCheckItem = async ({ item, page, skip404Check = false, skipPriceAssignment = false }: { item: Item, page?: Page, skip404Check?: boolean, skipPriceAssignment?: boolean }): Promise<Item> => {
   item = { ...item };

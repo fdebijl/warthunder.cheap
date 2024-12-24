@@ -41,8 +41,7 @@ export class MailAvailableFactory implements MailFactory {
   }
 
   async cleanup(): Promise<MailFactory> {
-    // TODO: Restore this line
-    // await deleteAlert(this.alert._id!);
+    await deleteAlert(this.alert._id!);
 
     return this;
   }
