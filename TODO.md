@@ -16,3 +16,5 @@ Todo:
 - Scraper
   - Split into two run types: hourly non-pricing runs and daily pricing runs: non-pricing runs do everything but enter a new Price, pricing runs do everything
   - Programatically get wayback machine roots (use memento api?)
+  - Selectors for older shops
+  - Save scraped image locally instead of hotlinking Gaijin's versions, in case they get deleted
