@@ -30,6 +30,7 @@ export class DetailsRenderer extends EventTarget {
     const slidesContainer = document.createElement('div');
     slidesContainer.classList.add('carousel__slides');
 
+    // TODO: Handle sources no longer being available
     data.details.media.forEach((media) => {
       const mediaParts = media.split(';');
       const isVideo = mediaParts[0].endsWith('.webm') || mediaParts[0].endsWith('.mp4');
@@ -233,10 +234,9 @@ export class DetailsRenderer extends EventTarget {
     scrapeInfo.classList.add('details__scrape-info', 'muted', 'margin-top-sm');
     scrapeInfo.innerHTML = `ID: ${data.id}<br>`;
     scrapeInfo.innerHTML += `Source: ${this.capitalize(data.source || 'live')}<br>`;
+    if (!data.buyable) scrapeInfo.innerHTML += `Store link: <a href="${data.href}" target="_blank">${data.href}</a><br>`;
     scrapeInfo.innerHTML += `First seen: ${new Date(data.createdAt).toDateString()}<br>`;
-    if (!data.buyable && data.lastAvailableAt) {
-      scrapeInfo.innerHTML += `Last available: ${new Date(data.lastAvailableAt).toDateString()}<br>`;
-    }
+    if (!data.buyable && data.lastAvailableAt) scrapeInfo.innerHTML += `Last available: ${new Date(data.lastAvailableAt).toDateString()}<br>`;
     scrapeInfo.innerHTML += `Last scraped: ${new Date(data.updatedAt).toDateString()}`;
     infoRight.appendChild(scrapeInfo);
 

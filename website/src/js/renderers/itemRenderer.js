@@ -72,7 +72,7 @@ export class ItemRenderer {
     if (!this.data.buyable && this.data.defaultPrice) {
       this.priceElement.textContent = `€${this.data.defaultPrice.toFixed(2)}`;
       this.priceElement.classList.add('normal');
-      discount.textContent = 'No longer available, last known price';
+      discount.textContent = 'Last known price';
       discount.classList.add('normal');
     } else if (!this.data.buyable) {
       this.priceElement.classList.add('hidden');
