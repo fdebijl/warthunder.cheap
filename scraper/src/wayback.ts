@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer';
 import { LOGLEVEL } from '@fdebijl/clog';
 import { Item, upsertItem } from 'wtcheap.shared';
+import { franc} from 'franc';
 
 import { deepCheckItem, getCurrentItems, isItemBuyable } from './scrapers';
 import { clog } from './index';
@@ -39,6 +40,13 @@ const TARGET_ROOTS_2022_SHOP = [
 const TARGET_ROOTS_2016_SHOP = [
 ];
 
+const containsNonLatinCharacters = (input: string): boolean => {
+  // eslint-disable-next-line no-control-regex
+  const nonLatinRegex = /[^\u0000-\u007F\u0100-\u024F\s.,;:'"\-()[\]{}!?0-9/]/;
+
+  return nonLatinRegex.test(input);
+}
+
 const scrapeRoot = async (root: string): Promise<Item[]> => {
   clog.log(`Scraping root ${root}`, LOGLEVEL.DEBUG);
 
@@ -60,6 +68,20 @@ const scrapeRoot = async (root: string): Promise<Item[]> => {
       const deepCheckedItem = await deepCheckItem({ item, page, skip404Check: true, skipPriceAssignment: true });
       deepCheckedItem.buyable = await isItemBuyable(liveLink);
       deepCheckedItem.href = liveLink;
+
+      // Prevent snapshots in the Wayback Machine in languages other than English from being used
+      // Could be changed in the future to only unset the title and description, but keep all the other info
+      if (containsNonLatinCharacters(deepCheckedItem.title!)) {
+        clog.log(`Item ${item.id} "${item.title}" has a non-latin title, skipping`, LOGLEVEL.DEBUG);
+        continue;
+      }
+
+      const descriptionlang = franc(deepCheckedItem.details?.description);
+
+      if (descriptionlang !== 'eng') {
+        clog.log(`Item ${item.id} "${item.title}" has a non-english description (${descriptionlang}), skipping`, LOGLEVEL.DEBUG);
+        continue
+      }
 
       clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
       await upsertItem(deepCheckedItem);
