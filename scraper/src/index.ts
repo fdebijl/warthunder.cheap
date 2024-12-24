@@ -4,7 +4,7 @@ import { getCurrentItems, deepCheckItem } from './scrapers';
 import { getItems, insertPrice, upsertItem, ensureIndices } from './db';
 import { availableAlertNeeded, discountAlertNeeded, triggerAlertsForAvailable, triggerAlertsForDiscount, triggerAlertsForItems } from './alerting';
 import { Price } from './domain';
-import { TARGET_ROOTS } from './constants';
+import { SHOP_2022_SELECTORS, TARGET_ROOTS } from './constants';
 import { waybackMain } from './wayback';
 
 export const clog = new Clog(LOGLEVEL.DEBUG);
@@ -52,7 +52,7 @@ const main = async () => {
   }
 
   for (const knownItem of notCurrentKnownItems) {
-    const item = await deepCheckItem({ item: knownItem });
+    const item = await deepCheckItem({ item: knownItem, selectors: SHOP_2022_SELECTORS });
 
     if (knownItem.buyable && !item.buyable) {
       item.lastAvailableAt = new Date(Date.now() - 12 * 60 * 60 * 1000);

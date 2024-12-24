@@ -16,3 +16,5 @@ Todo:
   - Organize the repo (sidebar/tabs/settings)
 - Scraper
   - Programatically get wayback machine roots (use memento api?)
+  - Selectors for older shops
+  - Save scraped image locally instead of hotlinking Gaijin's versions, in case they get deleted
