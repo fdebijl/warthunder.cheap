@@ -32,14 +32,13 @@ const TARGET_ROOTS_2022_SHOP = [
 ];
 
 // TODO: Populate this with the shop URLs for the 2016-style shop
-// TODO: add a way to switch the selector set between 2016 and 2021 shop, and add 2016 selectors
+// TODO: add a way to switch the selector set between 2016 and 2021 shop
+// TODO: add 2016 shop selectors
 // Shop with the previous set of selectors, starting from 2016
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const TARGET_ROOTS_2016_SHOP = [
 ];
 
-// TODO: Also backdate createdAt?
-// TODO: Also insert a Price object for the price of the item at the time of the snapshot?
 const scrapeRoot = async (root: string): Promise<Item[]> => {
   clog.log(`Scraping root ${root}`, LOGLEVEL.DEBUG);
 
