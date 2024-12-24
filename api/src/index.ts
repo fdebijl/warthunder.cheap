@@ -39,7 +39,12 @@ app.post(`/${PATH_PREFIX}/${API_VERSION}/alerts`, async (req, res) => {
     return;
   }
 
-  if (!req.body.itemId) {
+  if (!['newItem', 'priceChange', 'itemAvailable'].includes(req.body.eventType)) {
+    res.status(400).send(JSON.stringify({ message: 'Invalid event type' }));
+    return;
+  }
+
+  if (!req.body.itemId && req.body.eventType !== 'newItem') {
     res.status(400).send(JSON.stringify({ message: 'Item ID is required' }));
     return;
   }
@@ -53,7 +58,8 @@ app.post(`/${PATH_PREFIX}/${API_VERSION}/alerts`, async (req, res) => {
   const alertAlreadyExists = await alertExists(alert.recipient, alert.eventType, alert.itemId);
 
   if (alertAlreadyExists) {
-    res.status(409).send(JSON.stringify({ message: 'You already have an active alert for this item' }));
+    // We don't send a 409 here since that would allow email enumeration.
+    res.status(201).send();
     return;
   }
 
