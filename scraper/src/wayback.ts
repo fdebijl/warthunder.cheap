@@ -47,7 +47,7 @@ const containsNonLatinCharacters = (input: string): boolean => {
   return nonLatinRegex.test(input);
 }
 
-const scrapeRoot = async (root: string): Promise<Item[]> => {
+const scrapeRoot = async (root: string, seenItems: Item[]): Promise<Item[]> => {
   clog.log(`Scraping root ${root}`, LOGLEVEL.DEBUG);
 
   const items = await getCurrentItems({ targetRoots: [root], slowMode: true, ignoreDiscounts: true, skipDeepCheck: true });
@@ -56,7 +56,10 @@ const scrapeRoot = async (root: string): Promise<Item[]> => {
   page.setDefaultNavigationTimeout(90_000);
   page.setDefaultTimeout(90_000);
 
-  for (const item of items) {
+  const unseenItems = items.filter((item) => !seenItems.some((seenItem) => seenItem.id === item.id));
+  const usableItems = [];
+
+  for (const item of unseenItems) {
     // The href from getCurrenItems point to the live store, which will 404 for many items from the Wayback Machine,
     // so we have to rewrite the href to point to the archived version
     const archiveOrgPrefix = root.replace('/https://store.gaijin.net/catalog.php?category=WarThunderPacks', '');
@@ -85,20 +88,24 @@ const scrapeRoot = async (root: string): Promise<Item[]> => {
 
       clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
       await upsertItem(deepCheckedItem);
+      usableItems.push(deepCheckedItem);
     } catch (e) {
       clog.log(`Error while deep checking item ${item.id} "${item.title}": ${e}`, LOGLEVEL.ERROR);
     }
   }
 
-  return items;
+  return usableItems;
 }
 
 /** Perform a scraping run against the Wayback Machine to backfill the database */
 export const waybackMain = async () => {
   clog.log(`Starting Wayback Machine scraping run at ${new Date().toISOString()}`);
 
+  const seenItems = [];
+
   for (const root of TARGET_ROOTS_2022_SHOP) {
-    await scrapeRoot(root);
+    const usableItemsInRoot = await scrapeRoot(root, seenItems);
+    seenItems.push(...usableItemsInRoot);
   }
 
   clog.log(`Finished Wayback Machine scraping run at ${new Date().toISOString()}`);
