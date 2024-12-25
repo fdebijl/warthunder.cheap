@@ -3,11 +3,13 @@ import { LOGLEVEL } from '@fdebijl/clog';
 import { Item, upsertItem } from 'wtcheap.shared';
 import { franc} from 'franc';
 
-import { deepCheckItem, getCurrentItems, isItemBuyable, matchSelectors } from './scrapers';
+import { deepCheckItem, findNon404Memento, getCurrentItems, isItemBuyable, matchSelectors } from './scrapers';
+import { upsertItem } from './db';
+import { Item } from './domain';
 import { clog } from './index';
 import { getArchiveSnapshots } from './scrapers/getArchiveSnapshots';
 
-const WAYBACK_MACHINE_PAGE_TIMEOUT = 90_000;
+const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
 
 const containsNonLatinCharacters = (input: string): boolean => {
   // eslint-disable-next-line no-control-regex
@@ -18,6 +20,7 @@ const containsNonLatinCharacters = (input: string): boolean => {
 
 const validateMediaSources = async (media: string[]): Promise<string[]> => {
   const validatedMedia = [];
+
   for (const source of media) {
     let fixedSource = source;
     if (source.startsWith('/')) {
@@ -34,18 +37,31 @@ const validateMediaSources = async (media: string[]): Promise<string[]> => {
       clog.log(`Error fetching source ${fixedSource}: ${e}`, LOGLEVEL.ERROR);
     }
   }
+
   return validatedMedia;
 };
 
-const processUnseenItem = async (item: Item, root: { url: string, datetime: Date }, page: Page): Promise<Item | null> => {
-  const archiveOrgPrefix = root.url.replace('/https://store.gaijin.net/catalog.php?category=WarThunderPacks', '');
+const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> => {
   const liveLink = `${item.href}`;
-  item.href = `${archiveOrgPrefix}/${item.href}`;
+  const safeUrl = await findNon404Memento(item.href, page.browser());
+
+  if (!safeUrl) {
+    clog.log(`Item ${item.id} "${item.title}" is a 404 on every snapshot, skipping`, LOGLEVEL.DEBUG);
+    return null;
+  }
+
+  item.href = safeUrl.url;
   item.source = 'archive';
 
   try {
-    // TODO: If the archive URL points to a 404 redirect, try another memento
+    await page.goto(item.href, { waitUntil: 'networkidle2' });
     const selectors = await matchSelectors(page);
+
+    if (!selectors) {
+      clog.log(`Could not ascertain selectors for item ${item.id} "${item.title}", skipping`, LOGLEVEL.DEBUG);
+      return null;
+    }
+
     const deepCheckedItem = await deepCheckItem({ item, selectors, page, skip404Check: true, skipPriceAssignment: true });
     deepCheckedItem.buyable = await isItemBuyable(liveLink);
     deepCheckedItem.href = liveLink;
@@ -66,6 +82,16 @@ const processUnseenItem = async (item: Item, root: { url: string, datetime: Date
       deepCheckedItem.details.media = validatedMedia;
     }
 
+    if (deepCheckedItem.poster) {
+      const validatedPoster = await validateMediaSources([deepCheckedItem.poster]);
+
+      if (validatedPoster.length > 0) {
+        deepCheckedItem.poster = validatedPoster[0];
+      } else {
+        deepCheckedItem.poster = deepCheckedItem.details?.media?.find((source) => source.endsWith('.jpg') || source.endsWith('.png'));
+      }
+    }
+
     clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
     await upsertItem(deepCheckedItem);
 
@@ -80,7 +106,7 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
   clog.log(`Scraping root ${root.url} (${root.datetime.toISOString()})`, LOGLEVEL.DEBUG);
 
   const items = await getCurrentItems({ targetRoots: [root.url], slowMode: true, ignoreDiscounts: true, skipDeepCheck: true });
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+  const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox'], defaultViewport: { width: 1280, height: 720 } });
   const page = await browser.newPage();
   page.setDefaultNavigationTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
   page.setDefaultTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
@@ -90,7 +116,7 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
 
   for (const item of unseenItems) {
     try {
-      const processedItem = await processUnseenItem(item, root, page);
+      const processedItem = await processUnseenItem(item, page);
       if (processedItem) {
         usableItems.push(processedItem);
       }
@@ -109,11 +135,16 @@ export const waybackMain = async () => {
   const memento = await getArchiveSnapshots('https://store.gaijin.net/catalog.php?category=WarThunderPacks');
   const roots = memento.memento.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
 
+  clog.log(`Found ${roots.length} mementos`);
+
+  let index = 1;
   const seenItems = [];
 
   for (const root of roots) {
+    clog.log(`Processing root ${index}/${roots.length}`);
     const usableItemsInRoot = await scrapeRoot(root, seenItems);
     seenItems.push(...usableItemsInRoot);
+    index++;
   }
 
   clog.log(`Finished Wayback Machine scraping run at ${new Date().toISOString()}`);

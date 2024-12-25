@@ -2,6 +2,7 @@ import { Page } from 'puppeteer';
 
 import { SelectorSet } from '../domain';
 import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from '../constants';
+import { clog } from '../index';
 
 type DetailsInfo = {
   oldPrice: number;
@@ -15,10 +16,13 @@ type DetailsInfo = {
 export const getDetailsOnPage = async ({ page, selectors }: { page: Page, selectors: SelectorSet }): Promise<DetailsInfo> => {
   switch (selectors) {
     case SHOP_2022_SELECTORS: {
+      clog.log('Using 2022 selectors for detail page under scrape');
       return getDetailsOnPage2022(page, selectors);
     } case SHOP_2021_SELECTORS: {
+      clog.log('Using 2021 selectors for detail page under scrape');
       return getDetailsOnPage2021(page, selectors);
     } case SHOP_2016_SELECTORS: {
+      clog.log('Using 2016 selectors for detail page under scrape');
       return getDetailsOnPage2016(page, selectors);
     } default: {
       throw new Error(`Unknown selectors: ${selectors}`);
@@ -33,6 +37,9 @@ const getDetailsOnPage2022 = async (page: Page, selectors: SelectorSet): Promise
     const defaultPriceEl = document.querySelector(SELECTORS.ITEM__DEFAULT_PRICE);
     const media = [...document.querySelectorAll<HTMLDivElement>(SELECTORS.PAGE__MEDIA)].map((el) => el.dataset.fullSizeMediaUrl!);
     const description = document.querySelector(SELECTORS.PAGE__DESCRIPTION)?.textContent?.trim();
+    const shortDescription = Array.from(
+      document.querySelectorAll<HTMLLIElement>(SELECTORS.PAGE__SHORT_DESCRIPTION!)
+    ).map((li) => li.textContent?.trim() ?? '').join(' ');
 
     const stripCurrency = (price: string): number => {
       if (!price) {
@@ -47,7 +54,8 @@ const getDetailsOnPage2022 = async (page: Page, selectors: SelectorSet): Promise
       newPrice: stripCurrency(newPriceEl?.textContent?.trim() as string),
       defaultPrice: stripCurrency(defaultPriceEl?.textContent?.trim() as string),
       media,
-      description
+      description,
+      shortDescription
     };
   }, selectors);
 
@@ -66,7 +74,7 @@ const getDetailsOnPage2016 = async (page: Page, selectors: SelectorSet): Promise
     const media = [...document.querySelectorAll<HTMLImageElement>(SELECTORS.PAGE__MEDIA)].map((el) => el.src);
     const description = document.querySelector(SELECTORS.PAGE__DESCRIPTION)?.textContent?.trim();
     const shortDescription = Array.from(
-      document.querySelectorAll<HTMLLIElement>(selectors.ITEM__DESCRIPTION!)
+      document.querySelectorAll<HTMLLIElement>(SELECTORS.PAGE__SHORT_DESCRIPTION!)
     ).map((li) => li.textContent?.trim() ?? '').join(' ');
 
     const stripCurrency = (price: string): number => {

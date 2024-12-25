@@ -4,17 +4,15 @@ import { LOGLEVEL } from '@fdebijl/clog';
 import { Item } from 'wtcheap.shared';
 
 import { clog } from '../index';
-import { SHOP_2022_SELECTORS, PERMA_SALE_ITEM_IDS } from '../constants';
 import { Item } from '../domain';
 import { deepCheckItem } from './deepCheckItem';
-import { getItems } from '../db';
 import { getItemsOnPage } from './getItemsOnPage';
 import { matchSelectors } from './matchSelectors';
 
 // TODO: Extend documentation for parameters
 /** Use slowmode when on slow connections or when scraping the internet archive */
 export const getCurrentItems = async ({ targetRoots, slowMode = false, ignoreDiscounts = false, skipDeepCheck = false }: { targetRoots: string[], slowMode?: boolean, ignoreDiscounts?: boolean, skipDeepCheck?: boolean}): Promise<Item[]> => {
-  const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox'], defaultViewport: { width: 1280, height: 720 } });
+  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
   const page = await browser.newPage();
 
   const items: Item[] = [];
@@ -33,6 +31,14 @@ export const getCurrentItems = async ({ targetRoots, slowMode = false, ignoreDis
     const maxLoops = 50;
 
     while (loopCount <= maxLoops) {
+      // Remove the Internet Archive's toolbar, it interferes with pagination sometimes
+      await page.evaluate(() => {
+        const ippBase = document.querySelector('#wm-ipp-base');
+        if (ippBase) {
+          ippBase.remove();
+        }
+      });
+
       loopCount++;
 
       clog.log(`Scraping ${category} page ${loopCount}`, LOGLEVEL.DEBUG);
@@ -54,13 +60,13 @@ export const getCurrentItems = async ({ targetRoots, slowMode = false, ignoreDis
       }
 
       try {
-        await page.waitForSelector(SHOP_2022_SELECTORS.PAGE_NEXT, { timeout: slowMode ? 30_000 : 2_000 });
+        await page.waitForSelector(selectors.PAGE_NEXT, { visible: false, timeout: slowMode ? 30_000 : 2_000 });
       } catch (e) {
         clog.log('No next page button found, stopping pagination', LOGLEVEL.DEBUG);
         break;
       }
 
-      const nextPage = await page.$(SHOP_2022_SELECTORS.PAGE_NEXT);
+      const nextPage = await page.$(selectors.PAGE_NEXT);
 
       if (!nextPage) {
         break;

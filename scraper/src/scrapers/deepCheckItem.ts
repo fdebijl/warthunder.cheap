@@ -1,7 +1,8 @@
 import puppeteer, { Page } from 'puppeteer';
 import { Item, SelectorSet } from 'wtcheap.shared';
 
-import { PERMA_SALE_ITEM_IDS, SHOP_2022_SELECTORS } from '../constants';
+import { Item, SelectorSet } from '../domain';
+import { PERMA_SALE_ITEM_IDS } from '../constants';
 import { clog } from '../index';
 import { LOGLEVEL } from '@fdebijl/clog';
 import { isItemBuyable } from './isItemBuyable';
@@ -26,7 +27,7 @@ export const deepCheckItem = async ({ item, selectors, page, skip404Check = fals
   }
 
   await page.goto(item.href, { waitUntil: 'networkidle2' });
-  await page.waitForSelector(SHOP_2022_SELECTORS.PAGE__DESCRIPTION);
+  await page.waitForSelector(selectors.PAGE__DESCRIPTION);
 
   const detailsInfo = await getDetailsOnPage({ page, selectors})
 
@@ -48,7 +49,7 @@ export const deepCheckItem = async ({ item, selectors, page, skip404Check = fals
     item.details = {};
   }
 
-  if (detailsInfo.shortDescription) {
+  if (detailsInfo.shortDescription && !item.description) {
     item.description = detailsInfo.shortDescription;
   }
 

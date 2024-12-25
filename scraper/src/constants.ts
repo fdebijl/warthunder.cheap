@@ -32,7 +32,8 @@ export const SHOP_2022_SELECTORS: SelectorSet = {
   PAGE__OLD_PRICE: '.shop-price__old',
   PAGE__NEW_PRICE: '.shop-price__new',
   PAGE__MEDIA: '.gallery__page-slider .splide__list > .splide__slide',
-  PAGE__DESCRIPTION: '.shop__article'
+  PAGE__DESCRIPTION: '.shop__article',
+  PAGE__SHORT_DESCRIPTION: '.shop-buy__details ul'
 }
 
 // Reference page: https://web.archive.org/web/20210929014545/https://store.gaijin.net/catalog.php?category=WarThunderPacks
@@ -51,8 +52,9 @@ export const SHOP_2021_SELECTORS: SelectorSet = {
   PAGE__DEFAULT_PRICE: '.shop-price',
   PAGE__OLD_PRICE: '.shop-price__old',
   PAGE__NEW_PRICE: '.shop-price__new',
-  PAGE__MEDIA: '.gallery__page-slider .splide__list > .splide__slide .splide__slide-bg',
-  PAGE__DESCRIPTION: '.shop__article'
+  PAGE__MEDIA: '.gallery__page-slider .splide__list > .splide__slide',
+  PAGE__DESCRIPTION: '.shop__article',
+  PAGE__SHORT_DESCRIPTION: '.shop-buy__details ul'
 }
 
 // Reference page: https://web.archive.org/web/20160508114700/https://store.gaijin.net/catalog.php?category=WarThunderPacks
