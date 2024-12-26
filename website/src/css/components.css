@@ -212,6 +212,13 @@ dialog#details .details__wrapper {
   justify-content: center;
 }
 
+.details__alert-message {
+}
+
+.details__alert-message.error {
+  color: rgba(255, 126, 126, 0.6);
+}
+
 .details__chart-wrapper {
   display: flex;
   flex-flow: column nowrap;

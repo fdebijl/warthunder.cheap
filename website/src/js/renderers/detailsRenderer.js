@@ -168,6 +168,14 @@ export class DetailsRenderer extends EventTarget {
     alertButton.classList.add('details__action', 'jab', 'secondary');
     alertButton.textContent = data.buyable ? 'Alert me on discount' : 'Alert me when available';
 
+    actionsLeftAlert.appendChild(alertButton);
+    infoLeft.appendChild(actionsLeftAlert);
+
+    // Error/success message
+    const alertMessage = document.createElement('p');
+    alertMessage.classList.add('details__alert-message', 'muted');
+    infoLeft.appendChild(alertMessage);
+
     alertButton.addEventListener('click', (e) => {
       e.preventDefault();
 
@@ -181,14 +189,21 @@ export class DetailsRenderer extends EventTarget {
           itemId: data.id,
           eventType,
         }),
-      });
+      }).then(async (res) => {
+        const body = await res.json();
+        return { body, res };
+      }).then(({ body, res }) => {
+        if (!res.ok || res.status < 200 || res.status >= 300) {
+          throw new Error(body.message);
+        }
 
-      // TODO: Probably show a success/failure message here
+        alertMessage.innerText = `Alert set, you will receive an email when the item is ${data.buyable ? 'discounted' : 'available'}`;
+      }).catch((e) => {
+        alertMessage.classList.add('error');
+        alertMessage.innerText = `Failed to set alert: ${e.message}`;
+      });
     });
 
-    actionsLeftAlert.appendChild(alertButton);
-
-    infoLeft.appendChild(actionsLeftAlert);
     infoContainer.appendChild(infoLeft);
 
     // Right Info Column
