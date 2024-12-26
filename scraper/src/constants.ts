@@ -16,7 +16,7 @@ export const PERMA_SALE_ITEM_IDS = [
 ];
 
 // Reference page: https://web.archive.org/web/20220630070859/https://store.gaijin.net/catalog.php?category=WarThunderPacks
-export const SHOP_2022_SELECTORS: SelectorSet = {
+export const SHOP_2022_SELECTORS = {
   ITEM: '.showcase__item',
   ITEM__HREF: '.product-widget__link',
   ITEM__POSTER: '.product-widget__poster img',
@@ -34,10 +34,10 @@ export const SHOP_2022_SELECTORS: SelectorSet = {
   PAGE__MEDIA: '.gallery__page-slider .splide__list > .splide__slide',
   PAGE__DESCRIPTION: '.shop__article',
   PAGE__SHORT_DESCRIPTION: '.shop-buy__details ul'
-}
+} satisfies SelectorSet;
 
 // Reference page: https://web.archive.org/web/20210929014545/https://store.gaijin.net/catalog.php?category=WarThunderPacks
-export const SHOP_2021_SELECTORS: SelectorSet = {
+export const SHOP_2021_SELECTORS = {
   ITEM: '.showcase__item',
   ITEM__HREF: ' .showcase-item__link',
   ITEM__POSTER: '.showcase-item__preview img',
@@ -55,7 +55,7 @@ export const SHOP_2021_SELECTORS: SelectorSet = {
   PAGE__MEDIA: '.gallery__page-slider .splide__list > .splide__slide',
   PAGE__DESCRIPTION: '.shop__article',
   PAGE__SHORT_DESCRIPTION: '.shop-buy__details ul'
-}
+} satisfies SelectorSet;
 
 // Reference page: https://web.archive.org/web/20160508114700/https://store.gaijin.net/catalog.php?category=WarThunderPacks
 export const SHOP_2016_SELECTORS: SelectorSet = {
@@ -75,7 +75,7 @@ export const SHOP_2016_SELECTORS: SelectorSet = {
   PAGE__MEDIA: '.screens-list img',
   PAGE__DESCRIPTION: '.inner__description-block .item-col-left',
   PAGE__SHORT_DESCRIPTION: '.inner__description li'
-}
+} satisfies SelectorSet;
 
 export const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/wtcheap';
 export const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY as string;

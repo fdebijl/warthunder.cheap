@@ -8,6 +8,7 @@ import { upsertItem } from './db';
 import { Item } from './domain';
 import { clog } from './index';
 import { getArchiveSnapshots } from './scrapers/getArchiveSnapshots';
+import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants';
 
 const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
 
@@ -55,7 +56,29 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
 
   try {
     await page.goto(item.href, { waitUntil: 'networkidle2' });
+    await page.evaluate(() => {
+      // Prevent the Internet Archive's toolbar from interfering with the page
+      const ippBase = document.querySelector('#wm-ipp-base');
+
+      if (ippBase) {
+        ippBase.remove();
+      }
+    });
+
     const selectors = await matchSelectors(page);
+
+    switch (selectors) {
+      case SHOP_2022_SELECTORS: {
+        clog.log('Using 2022 selectors for detail page under scrape');
+        break;
+      } case SHOP_2021_SELECTORS: {
+        clog.log('Using 2021 selectors for detail page under scrape');
+        break;
+      } case SHOP_2016_SELECTORS: {
+        clog.log('Using 2016 selectors for detail page under scrape');
+        break;
+      }
+    }
 
     if (!selectors) {
       clog.log(`Could not ascertain selectors for item ${item.id} "${item.title}", skipping`, LOGLEVEL.DEBUG);
@@ -95,6 +118,9 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
     clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
     await upsertItem(deepCheckedItem);
 
+    // TODO: Insert price
+    // TODO: Backdate createdAt, make sure this only happens once for every item
+
     return deepCheckedItem;
   } catch (e) {
     clog.log(`Error during deep check of item ${item.id} "${item.title}" at ${item.href}: ${e}`, LOGLEVEL.ERROR);
@@ -107,7 +133,7 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
 
   const items = await getCurrentItems({ targetRoots: [root.url], slowMode: true, ignoreDiscounts: true, skipDeepCheck: true });
   const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox'], defaultViewport: { width: 1280, height: 720 } });
-  const page = await browser.newPage();
+  const page = await browser.pages().then((pages) => pages[0]);
   page.setDefaultNavigationTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
   page.setDefaultTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
 
@@ -116,7 +142,10 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
 
   for (const item of unseenItems) {
     try {
+      clog.log(`Processing item ${item.id} "${item.title}"`, LOGLEVEL.DEBUG);
+
       const processedItem = await processUnseenItem(item, page);
+
       if (processedItem) {
         usableItems.push(processedItem);
       }
@@ -124,6 +153,8 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
       clog.log(`Error processing item ${item.id} "${item.title}": ${e}`, LOGLEVEL.ERROR);
     }
   }
+
+  await browser.close();
 
   return usableItems;
 };
@@ -141,7 +172,7 @@ export const waybackMain = async () => {
   const seenItems = [];
 
   for (const root of roots) {
-    clog.log(`Processing root ${index}/${roots.length}`);
+    clog.log(`Processing memento ${index}/${roots.length}`);
     const usableItemsInRoot = await scrapeRoot(root, seenItems);
     seenItems.push(...usableItemsInRoot);
     index++;

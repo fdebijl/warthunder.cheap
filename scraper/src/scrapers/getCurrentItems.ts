@@ -10,6 +10,7 @@ import { getItemsOnPage } from './getItemsOnPage';
 import { matchSelectors } from './matchSelectors';
 
 // TODO: Extend documentation for parameters
+// TODO: Get rid of slowMode in favor of waitForSelectors
 /** Use slowmode when on slow connections or when scraping the internet archive */
 export const getCurrentItems = async ({ targetRoots, slowMode = false, ignoreDiscounts = false, skipDeepCheck = false }: { targetRoots: string[], slowMode?: boolean, ignoreDiscounts?: boolean, skipDeepCheck?: boolean}): Promise<Item[]> => {
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
@@ -18,7 +19,7 @@ export const getCurrentItems = async ({ targetRoots, slowMode = false, ignoreDis
   const items: Item[] = [];
 
   for (const targetRoot of targetRoots) {
-    await page.goto(targetRoot, { timeout: slowMode ? 90_000 : 30_000 });
+    await page.goto(targetRoot, { waitUntil: 'networkidle2', timeout: slowMode ? 60_000 : 30_000 });
 
     if (slowMode) {
       await milliseconds(2000);
@@ -34,6 +35,7 @@ export const getCurrentItems = async ({ targetRoots, slowMode = false, ignoreDis
       // Remove the Internet Archive's toolbar, it interferes with pagination sometimes
       await page.evaluate(() => {
         const ippBase = document.querySelector('#wm-ipp-base');
+
         if (ippBase) {
           ippBase.remove();
         }
@@ -60,7 +62,7 @@ export const getCurrentItems = async ({ targetRoots, slowMode = false, ignoreDis
       }
 
       try {
-        await page.waitForSelector(selectors.PAGE_NEXT, { visible: false, timeout: slowMode ? 30_000 : 2_000 });
+        await page.waitForSelector(selectors.PAGE_NEXT, { visible: false, timeout: slowMode ? 20_000 : 2_000 });
       } catch (e) {
         clog.log('No next page button found, stopping pagination', LOGLEVEL.DEBUG);
         break;

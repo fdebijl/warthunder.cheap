@@ -7,6 +7,8 @@ import { clog } from '../index';
 import { LOGLEVEL } from '@fdebijl/clog';
 import { isItemBuyable } from './isItemBuyable';
 import { getDetailsOnPage } from './getDetailsOnPage';
+import { milliseconds, seconds } from '@fdebijl/pog';
+import { findInFrames } from './findInFrames';
 
 export const deepCheckItem = async ({ item, selectors, page, skip404Check = false, skipPriceAssignment = false }: { item: Item, selectors: SelectorSet, page?: Page, skip404Check?: boolean, skipPriceAssignment?: boolean }): Promise<Item> => {
   item = { ...item };
@@ -26,8 +28,19 @@ export const deepCheckItem = async ({ item, selectors, page, skip404Check = fals
     page = await browser.newPage();
   }
 
+  // TODO: During wayback runs the page will already be on the right url, so we can skip this step
   await page.goto(item.href, { waitUntil: 'networkidle2' });
-  await page.waitForSelector(selectors.PAGE__DESCRIPTION);
+
+  const shortDescriptionOnPage = selectors.PAGE__SHORT_DESCRIPTION ? await page.$(selectors.PAGE__SHORT_DESCRIPTION) : null;
+  const shortDescriptionInFrames = await findInFrames(page, selectors.PAGE__SHORT_DESCRIPTION!);
+
+  clog.log(`Short description on page: ${!!shortDescriptionOnPage}, in frames: ${!!shortDescriptionInFrames}`, LOGLEVEL.DEBUG);
+
+  await Promise.race([
+    milliseconds(30_000 - 10).then(() => { throw new Error('Could not find description during wait before getDetailsOnPage') }),
+    page.waitForSelector(selectors.PAGE__DESCRIPTION, { visible: false, timeout: 30_000 }),
+    page.waitForSelector(selectors.PAGE__SHORT_DESCRIPTION ?? selectors.PAGE__DESCRIPTION, { visible: false, timeout: 30_000 })
+  ]);
 
   const detailsInfo = await getDetailsOnPage({ page, selectors})
 
