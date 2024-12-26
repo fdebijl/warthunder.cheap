@@ -165,6 +165,7 @@ dialog .dialog__wrapper {
 
   dialog .dialog__wrapper {
     height: unset;
+    max-height: unset;
   }
 }
 
