@@ -1,4 +1,3 @@
-// TODO: Implement
 export class ParamManager {
   items = [];
   params = {};

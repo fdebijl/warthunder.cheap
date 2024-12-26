@@ -30,7 +30,7 @@ app.get(`/${PATH_PREFIX}/${API_VERSION}/prices/:itemId`, async (req, res) => {
 
 app.post(`/${PATH_PREFIX}/${API_VERSION}/alerts`, async (req, res) => {
   if (!req.body.recipient) {
-    res.status(400).send(JSON.stringify({ message: 'Recipient is required' }));
+    res.status(400).send(JSON.stringify({ message: 'Email address is required' }));
     return;
   }
 
@@ -59,7 +59,7 @@ app.post(`/${PATH_PREFIX}/${API_VERSION}/alerts`, async (req, res) => {
 
   await insertAlert(alert);
 
-  res.status(201).send();
+  res.status(201).send(JSON.stringify({ message: 'Alert created' }));
 });
 
 app.listen(PORT, () => {
