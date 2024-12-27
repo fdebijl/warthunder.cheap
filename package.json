@@ -1,0 +1,8 @@
+{
+  "name": "wtcheap",
+  "workspaces": [
+    "api",
+    "scraper",
+    "shared"
+  ]
+}

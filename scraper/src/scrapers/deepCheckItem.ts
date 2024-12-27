@@ -1,6 +1,6 @@
 import puppeteer, { Page } from 'puppeteer';
+import { Item } from 'wtcheap.shared';
 
-import { Item } from '../domain';
 import { PERMA_SALE_ITEM_IDS, SELECTORS } from '../constants';
 import { clog } from '../index';
 import { LOGLEVEL } from '@fdebijl/clog';

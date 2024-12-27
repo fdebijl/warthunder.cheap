@@ -1,9 +1,10 @@
 {
-  "extends": "@fdebijl/tsconfig",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
-	},
+    "rootDir": "./src",
+    "skipLibCheck": true
+  },
   "exclude": [
     "dist/"
   ]

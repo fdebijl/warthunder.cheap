@@ -1,6 +1,6 @@
 import { LOGLEVEL } from '@fdebijl/clog';
+import { connect } from 'wtcheap.shared';
 
-import { connect } from './connect';
 import { clog } from '../index';
 
 export const ensureIndices = async () => {
@@ -17,7 +17,6 @@ export const ensureIndices = async () => {
   await db.collection('alerts').createIndex({ eventType: 1 });
   await db.collection('alerts').createIndex({ eventType: 1, itemId: 1 });
   await db.collection('alerts').createIndex({ itemId: 1 });
-
 
   clog.log('Indices rectified', LOGLEVEL.DEBUG);
 }

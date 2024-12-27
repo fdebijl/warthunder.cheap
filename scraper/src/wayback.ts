@@ -1,9 +1,8 @@
 import puppeteer from 'puppeteer';
 import { LOGLEVEL } from '@fdebijl/clog';
+import { Item, upsertItem } from 'wtcheap.shared';
 
 import { deepCheckItem, getCurrentItems, isItemBuyable } from './scrapers';
-import { upsertItem } from './db';
-import { Item } from './domain';
 import { clog } from './index';
 
 // Shop with the current selectors, starting from September 2021
