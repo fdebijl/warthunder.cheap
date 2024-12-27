@@ -1,8 +1,19 @@
-import { clog } from '../index';
-import { Item } from '../domain';
+import { Item, MailNewItemFactory, findAlerts } from 'wtcheap.shared';
 
-// TODO: Implement
+import { clog } from '../index';
+
 export const triggerAlertsForItems = async (newItems: Item[]) => {
-  clog.log(`Triggering alerts for ${newItems.length} new items:`);
-  clog.log(newItems.map((item) => item.title).join(', '));
+  clog.log(`Triggering availability alerts for ${newItems.length} new items`);
+
+  const alerts = await findAlerts({ eventType: 'newItem' });
+
+  for (const alert of alerts) {
+    const factory = new MailNewItemFactory(alert, newItems);
+
+    await factory.generate()
+      .then(f => f.send())
+      .then(f => f.cleanup());
+  }
+
+  return;
 };

@@ -1,0 +1,19 @@
+FROM node:22-alpine AS base
+WORKDIR /usr/src/app
+COPY . .
+RUN npm install --workspaces
+RUN npm run compile --workspaces --if-exists
+
+FROM base AS builder
+WORKDIR /usr/src/app/api
+RUN npm run compile
+
+FROM node:22-alpine AS prod
+WORKDIR /usr/src/app/api
+COPY api/package.json ./
+COPY package-lock.json ./
+COPY --from=builder /usr/src/app/api/dist ./
+COPY --from=base /usr/src/app/node_modules /usr/src/app/node_modules
+COPY --from=base /usr/src/app/shared /usr/src/app/shared
+RUN npm install --omit=dev
+CMD ["npm", "start"]

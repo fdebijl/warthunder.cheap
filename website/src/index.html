@@ -45,7 +45,7 @@
 
       <hr>
 
-      <a href="#" class="dialog_open hidden" data-dialog-id="alerts">Manage alerts</a>
+      <a href="#" class="dialog_open" data-dialog-id="alerts">Manage alerts</a>
       <a href="#" class="dialog_open" data-dialog-id="about">About Warthunder.cheap</a>
       <a href="#" class="dialog_open" data-dialog-id="faq">FAQ</a>
     </aside>
@@ -153,7 +153,18 @@
 
   <dialog id="alerts">
     <div class="dialog__wrapper">
-      Coming soon :)
+      <h1>Manage Alerts</h1>
+      <p class="margin-top-sm">
+        Here you can set up an alert for when new items become available in the War Thunder Store.
+      </p>
+
+      <div class="alertgrid">
+        <!-- alertRenderer injects alerts here -->
+      </div>
+
+      <div class="center">
+        <button class="dialog_close fab" data-dialog-id="alerts">Close</button>
+      </div>
     </div>
   </dialog>
 

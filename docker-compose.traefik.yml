@@ -53,6 +53,10 @@ services:
         - "traefik.enable=true"
     environment:
       - MONGODB_URI=mongodb://127.0.0.1:27017
+      - MAILGUN_API_KEY=aaaa-bbbb-cccc-dddd
+      - MAILGUN_DOMAIN=mail.example.com
+      - MAILGUN_SENDER=noreply@example.com
+      - JWT_SECRET=unsafeWtCheapSecret
       - PORT=3000
   scraper:
     image: fdebijl/warthunder.cheap:latest-scraper

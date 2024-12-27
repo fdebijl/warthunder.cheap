@@ -1,6 +1,7 @@
 import { ItemRenderer } from './renderers/itemRenderer.js';
 import { DetailsRenderer } from './renderers/detailsRenderer.js';
 import { ReferalRenderer } from './renderers/referalRenderer.js';
+import { AlertRenderer } from './renderers/alertRenderer.js';
 import { ParamManager } from './paramManager.js';
 import { loadModals } from './modalLoader.js';
 import { loadHeader } from './headerLoader.js';
@@ -42,6 +43,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderer = new ItemRenderer(item, referalRenderer, detailsRenderer);
     renderer.appendTo('.itemcategory.archived .itemgrid');
   });
+
+  const alertRenderer = new AlertRenderer('#alerts .alertgrid');
 
   const paramManager = new ParamManager(referalRenderer, detailsRenderer, [...currentItems, ...archivedItems]);
   paramManager.initParams();

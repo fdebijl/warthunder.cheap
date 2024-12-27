@@ -1,11 +1,11 @@
 import { Clog, LOGLEVEL } from '@fdebijl/clog';
+import { Price, listItems, insertPrice, upsertItem, } from 'wtcheap.shared';
 
 import { getCurrentItems, deepCheckItem } from './scrapers';
-import { getItems, insertPrice, upsertItem, ensureIndices } from './db';
 import { availableAlertNeeded, discountAlertNeeded, triggerAlertsForAvailable, triggerAlertsForDiscount, triggerAlertsForItems } from './alerting';
-import { Price } from './domain';
 import { TARGET_ROOTS } from './constants';
 import { waybackMain } from './wayback';
+import { ensureIndices } from './db/ensureIndices';
 
 export const clog = new Clog(LOGLEVEL.DEBUG);
 
@@ -13,7 +13,7 @@ const main = async () => {
   await ensureIndices();
 
   const currentItems = await getCurrentItems({ targetRoots: TARGET_ROOTS });
-  const existingItems = await getItems();
+  const existingItems = await listItems();
   const notCurrentKnownItems = existingItems.filter((item) => !currentItems.some((currentItem) => currentItem.id === item.id));
   const newItems = currentItems.filter((item) => !existingItems.some((existingItem) => existingItem.id === item.id));
 

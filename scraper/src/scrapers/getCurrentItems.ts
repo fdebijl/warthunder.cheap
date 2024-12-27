@@ -1,10 +1,10 @@
 import puppeteer from 'puppeteer';
 import { milliseconds } from '@fdebijl/pog';
 import { LOGLEVEL } from '@fdebijl/clog';
+import { Item } from 'wtcheap.shared';
 
 import { clog } from '../index';
 import { SELECTORS, PERMA_SALE_ITEM_IDS } from '../constants';
-import { Item } from '../domain';
 import { deepCheckItem } from './deepCheckItem';
 
 // TODO: Extend documentation for parameters

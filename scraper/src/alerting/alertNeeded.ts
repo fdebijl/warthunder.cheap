@@ -1,4 +1,4 @@
-import { Item } from '../domain';
+import { Item } from 'wtcheap.shared';
 
 export const discountAlertNeeded = (currentItem: Item, previousItem: Item): boolean => {
   return !!currentItem.isDiscounted && !previousItem.isDiscounted;

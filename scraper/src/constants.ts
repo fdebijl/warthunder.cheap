@@ -32,8 +32,3 @@ export const SELECTORS = {
   PAGE__MEDIA: '.gallery__page-slider .splide__list > .splide__slide',
   PAGE__DESCRIPTION: '.shop__article'
 }
-
-export const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/wtcheap';
-export const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY as string;
-export const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN as string;
-export const MAILGUN_SENDER = process.env.MAILGUN_SENDER || 'noreply@warthunder.cheap';
