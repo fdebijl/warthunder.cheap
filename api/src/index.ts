@@ -115,7 +115,7 @@ app.delete(`/${PATH_PREFIX}/${API_VERSION}/alerts/:alertId`, async (req, res) =>
   res.status(200).send(JSON.stringify({ message: 'Alert deleted' }));
 });
 
-app.get(`/${PATH_PREFIX}/${API_VERSION}/token/request`, async (req, res) => {
+app.post(`/${PATH_PREFIX}/${API_VERSION}/tokens/request`, async (req, res) => {
   const email = req.body.email;
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
