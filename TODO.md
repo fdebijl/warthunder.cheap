@@ -7,7 +7,6 @@ Todo:
   - Alert Management
   - analytics.floris.amsterdam hookup?
 - API
-  - Alert management endpoints (delete alerts) (needs 2fa via email?)
   - Rate limiting
 - DB
   - Ensure indices are set up correctly
