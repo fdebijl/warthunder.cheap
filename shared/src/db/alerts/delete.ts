@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 
-import { connect } from '../connect';
+import { connect } from '../connect.js';
 
 export const deleteAlert = async (alertId: ObjectId | string): Promise<void> => {
   const db = await connect();

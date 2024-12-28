@@ -1,6 +1,6 @@
-import { Price } from '../../domain';
+import { Price } from '../../domain/index.js';
 
-import { connect } from '../connect';
+import { connect } from '../connect.js';
 
 export const getPricesForItem = async (itemId: string): Promise<Price[]> => {
   const db = await connect();

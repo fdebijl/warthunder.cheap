@@ -1,7 +1,7 @@
 import { Item, MailDiscountFactory, findAlerts } from 'wtcheap.shared';
 
-import { clog } from '../index';
-import { discountAlertNeeded } from './alertNeeded';
+import { clog } from '../index.js';
+import { discountAlertNeeded } from './alertNeeded.js';
 
 export const triggerAlertsForDiscount = async (currentItem: Item, previousItem: Item) => {
   if (!discountAlertNeeded(currentItem, previousItem)) {

@@ -1,83 +1,180 @@
-import puppeteer from 'puppeteer';
+import puppeteer, { Page } from 'puppeteer';
 import { LOGLEVEL } from '@fdebijl/clog';
 import { Item, upsertItem } from 'wtcheap.shared';
+import { franc } from 'franc';
 
-import { deepCheckItem, getCurrentItems, isItemBuyable } from './scrapers';
-import { clog } from './index';
+import { deepCheckItem, findNon404Memento, getCurrentItems, isItemBuyable, matchSelectors } from './scrapers/index.js';
+import { clog } from './index.js';
+import { getArchiveSnapshots } from './scrapers/getArchiveSnapshots.js';
+import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants.js';
 
-// Shop with the current selectors, starting from September 2021
-const TARGET_ROOTS_2022_SHOP = [
-  // 'https://web.archive.org/web/20210929014545/https://store.gaijin.net/catalog.php?category=WarThunderPacks', Different selectors
-  // 'https://web.archive.org/web/20220115162744/https://store.gaijin.net/catalog.php?category=WarThunderPacks', Different selectors
-  // 'https://web.archive.org/web/20220314062014/https://store.gaijin.net/catalog.php?category=warthunderpacks', Different selectors
-  'https://web.archive.org/web/20220429050443/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20220605190411/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20220905162138/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20220929203024/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20221007054640/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20230106154507/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20230222072312/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20230222072312/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20230422052906/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20230608181607/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20230808023956/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20231019031035/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20231125150904/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20231202085228/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20240217152806/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20240907232645/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20241002221359/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20241116000410/https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://web.archive.org/web/20241211183851/https://store.gaijin.net/catalog.php?category=WarThunderPacks'
-];
+const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
 
-// TODO: Populate this with the shop URLs for the 2016-style shop
-// TODO: add a way to switch the selector set between 2016 and 2021 shop, and add 2016 selectors
-// Shop with the previous set of selectors, starting from 2016
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const TARGET_ROOTS_2016_SHOP = [
-];
+const containsNonLatinCharacters = (input: string): boolean => {
+  // eslint-disable-next-line no-control-regex
+  const nonLatinRegex = /[^\u0000-\u007F\u0100-\u024F\s.,;:'"\-()[\]{}!?0-9/]/;
 
-// TODO: Also backdate createdAt?
-// TODO: Also insert a Price object for the price of the item at the time of the snapshot?
-const scrapeRoot = async (root: string): Promise<Item[]> => {
-  clog.log(`Scraping root ${root}`, LOGLEVEL.DEBUG);
+  return nonLatinRegex.test(input);
+}
 
-  const items = await getCurrentItems({ targetRoots: [root], slowMode: true, ignoreDiscounts: true, skipDeepCheck: true });
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
-  const page = await browser.newPage();
-  page.setDefaultNavigationTimeout(90_000);
-  page.setDefaultTimeout(90_000);
+const validateMediaSources = async (media: string[]): Promise<string[]> => {
+  const validatedMedia = [];
 
-  for (const item of items) {
-    // The href from getCurrenItems point to the live store, which will 404 for many items from the Wayback Machine,
-    // so we have to rewrite the href to point to the archived version
-    const archiveOrgPrefix = root.replace('/https://store.gaijin.net/catalog.php?category=WarThunderPacks', '');
-    const liveLink = `${item.href}`;
-    item.href = `${archiveOrgPrefix}/${item.href}`;
-    item.source = 'archive';
-
+  for (const source of media) {
+    let fixedSource = source;
+    if (source.startsWith('/')) {
+      fixedSource = `https://static-store.gaijin.net${source}`;
+    }
     try {
-      const deepCheckedItem = await deepCheckItem({ item, page, skip404Check: true, skipPriceAssignment: true });
-      deepCheckedItem.buyable = await isItemBuyable(liveLink);
-      deepCheckedItem.href = liveLink;
-
-      clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
-      await upsertItem(deepCheckedItem);
+      const response = await fetch(fixedSource, { method: 'HEAD' });
+      if (response.ok) {
+        validatedMedia.push(fixedSource);
+      } else {
+        clog.log(`Source ${fixedSource} returned ${response.status}, removing`, LOGLEVEL.DEBUG);
+      }
     } catch (e) {
-      clog.log(`Error while deep checking item ${item.id} "${item.title}": ${e}`, LOGLEVEL.ERROR);
+      clog.log(`Error fetching source ${fixedSource}: ${e}`, LOGLEVEL.ERROR);
     }
   }
 
-  return items;
-}
+  return validatedMedia;
+};
+
+const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> => {
+  const liveLink = `${item.href}`;
+  const safeUrl = await findNon404Memento(item.href, page.browser());
+
+  if (!safeUrl) {
+    clog.log(`Item ${item.id} "${item.title}" is a 404 on every snapshot, skipping`, LOGLEVEL.DEBUG);
+    return null;
+  }
+
+  item.href = safeUrl.url;
+  item.source = 'archive';
+
+  try {
+    await page.goto(item.href, { waitUntil: 'networkidle2' });
+    await page.evaluate(() => {
+      // Prevent the Internet Archive's toolbar from interfering with the page
+      const ippBase = document.querySelector('#wm-ipp-base');
+
+      if (ippBase) {
+        ippBase.remove();
+      }
+    });
+
+    const selectors = await matchSelectors(page);
+
+    switch (selectors) {
+      case SHOP_2022_SELECTORS: {
+        clog.log('Using 2022 selectors for detail page under scrape');
+        break;
+      } case SHOP_2021_SELECTORS: {
+        clog.log('Using 2021 selectors for detail page under scrape');
+        break;
+      } case SHOP_2016_SELECTORS: {
+        clog.log('Using 2016 selectors for detail page under scrape');
+        break;
+      }
+    }
+
+    if (!selectors) {
+      clog.log(`Could not ascertain selectors for item ${item.id} "${item.title}", skipping`, LOGLEVEL.DEBUG);
+      return null;
+    }
+
+    const deepCheckedItem = await deepCheckItem({ item, selectors, page, skip404Check: true, skipPriceAssignment: true });
+    deepCheckedItem.buyable = await isItemBuyable(liveLink);
+    deepCheckedItem.href = liveLink;
+
+    if (containsNonLatinCharacters(deepCheckedItem.title!)) {
+      clog.log(`Item ${item.id} "${item.title}" has a non-latin title, skipping`, LOGLEVEL.DEBUG);
+      return null;
+    }
+
+    const descriptionLang = franc(deepCheckedItem.details?.description);
+    if (descriptionLang !== 'eng') {
+      clog.log(`Item ${item.id} "${item.title}" has a non-english description (${descriptionLang}), skipping`, LOGLEVEL.DEBUG);
+      return null;
+    }
+
+    if (deepCheckedItem.details?.media) {
+      const validatedMedia = await validateMediaSources(deepCheckedItem.details.media);
+      deepCheckedItem.details.media = validatedMedia;
+    }
+
+    if (deepCheckedItem.poster) {
+      const validatedPoster = await validateMediaSources([deepCheckedItem.poster]);
+
+      if (validatedPoster.length > 0) {
+        deepCheckedItem.poster = validatedPoster[0];
+      } else {
+        deepCheckedItem.poster = deepCheckedItem.details?.media?.find((source) => source.endsWith('.jpg') || source.endsWith('.png'));
+      }
+    }
+
+    clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
+    await upsertItem(deepCheckedItem);
+
+    // TODO: Insert price
+    // TODO: Backdate createdAt, make sure this only happens once for every item
+    // TODO: Store poster and media in a NFS volume so the website can display it
+
+    return deepCheckedItem;
+  } catch (e) {
+    clog.log(`Error during deep check of item ${item.id} "${item.title}" at ${item.href}: ${e}`, LOGLEVEL.ERROR);
+    return null;
+  }
+};
+
+const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item[]): Promise<Item[]> => {
+  clog.log(`Scraping root ${root.url} (${root.datetime.toISOString()})`, LOGLEVEL.DEBUG);
+
+  const items = await getCurrentItems({ targetRoots: [root.url], slowMode: true, ignoreDiscounts: true, skipDeepCheck: true });
+  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+  const page = await browser.pages().then((pages) => pages[0]);
+  page.setDefaultNavigationTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
+  page.setDefaultTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
+
+  const unseenItems = items.filter((item) => !seenItems.some((seenItem) => seenItem.id === item.id));
+  const usableItems = [];
+
+  for (const item of unseenItems) {
+    try {
+      clog.log(`Processing item ${item.id} "${item.title}"`, LOGLEVEL.DEBUG);
+
+      const processedItem = await processUnseenItem(item, page);
+
+      if (processedItem) {
+        usableItems.push(processedItem);
+      }
+    } catch (e) {
+      clog.log(`Error processing item ${item.id} "${item.title}": ${e}`, LOGLEVEL.ERROR);
+    }
+  }
+
+  await browser.close();
+
+  return usableItems;
+};
 
 /** Perform a scraping run against the Wayback Machine to backfill the database */
 export const waybackMain = async () => {
   clog.log(`Starting Wayback Machine scraping run at ${new Date().toISOString()}`);
 
-  for (const root of TARGET_ROOTS_2022_SHOP) {
-    await scrapeRoot(root);
+  const memento = await getArchiveSnapshots('https://store.gaijin.net/catalog.php?category=WarThunderPacks');
+  const roots = memento.memento.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
+
+  clog.log(`Found ${roots.length} mementos`);
+
+  let index = 1;
+  const seenItems = [];
+
+  for (const root of roots) {
+    clog.log(`Processing memento ${index}/${roots.length}`);
+    const usableItemsInRoot = await scrapeRoot(root, seenItems);
+    seenItems.push(...usableItemsInRoot);
+    index++;
   }
 
   clog.log(`Finished Wayback Machine scraping run at ${new Date().toISOString()}`);

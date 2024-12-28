@@ -1,7 +1,7 @@
 import { Item, MailAvailableFactory, findAlerts } from 'wtcheap.shared';
 
-import { clog } from '../index';
-import { availableAlertNeeded } from './alertNeeded';
+import { clog } from '../index.js';
+import { availableAlertNeeded } from './alertNeeded.js';
 
 export const triggerAlertsForAvailable = async (currentItem: Item, previousItem: Item) => {
   if (!availableAlertNeeded(currentItem, previousItem)) {

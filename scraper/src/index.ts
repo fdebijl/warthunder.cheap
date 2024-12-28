@@ -1,11 +1,11 @@
 import { Clog, LOGLEVEL } from '@fdebijl/clog';
 import { Price, listItems, insertPrice, upsertItem, } from 'wtcheap.shared';
 
-import { getCurrentItems, deepCheckItem } from './scrapers';
-import { availableAlertNeeded, discountAlertNeeded, triggerAlertsForAvailable, triggerAlertsForDiscount, triggerAlertsForItems } from './alerting';
-import { TARGET_ROOTS } from './constants';
-import { waybackMain } from './wayback';
-import { ensureIndices } from './db/ensureIndices';
+import { getCurrentItems, deepCheckItem } from './scrapers/index.js';
+import { availableAlertNeeded, discountAlertNeeded, triggerAlertsForAvailable, triggerAlertsForDiscount, triggerAlertsForItems } from './alerting/index.js';
+import { SHOP_2022_SELECTORS, TARGET_ROOTS } from './constants.js';
+import { waybackMain } from './wayback.js';
+import { ensureIndices } from './db/ensureIndices.js';
 
 export const clog = new Clog(LOGLEVEL.DEBUG);
 
@@ -52,7 +52,7 @@ const main = async () => {
   }
 
   for (const knownItem of notCurrentKnownItems) {
-    const item = await deepCheckItem({ item: knownItem });
+    const item = await deepCheckItem({ item: knownItem, selectors: SHOP_2022_SELECTORS });
 
     if (knownItem.buyable && !item.buyable) {
       item.lastAvailableAt = new Date(Date.now() - 12 * 60 * 60 * 1000);

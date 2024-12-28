@@ -8,11 +8,9 @@ Todo:
   - analytics.floris.amsterdam hookup?
 - API
   - Rate limiting
-- DB
-  - Ensure indices are set up correctly
 - Devops/other
   - Add readmes
   - Add other markdown files such as security/contributing for github purposes
-  - Organize the repo (sidebar/tabs/settings)
 - Scraper
   - Split into two run types: hourly non-pricing runs and daily pricing runs: non-pricing runs do everything but enter a new Price, pricing runs do everything
+  - Save scraped image locally instead of hotlinking Gaijin's versions, in case they get deleted

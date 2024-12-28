@@ -1,10 +1,11 @@
 import formData from 'form-data';
 import Mailgun from 'mailgun.js';
-import { Mail } from './domain';
 
-import { MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_SENDER } from './constants';
+import { Mail } from './domain/index.js';
 
-const mailgun = new Mailgun(formData);
+import { MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_SENDER } from './constants.js';
+
+const mailgun = new Mailgun.default(formData);
 const mailgunClient = mailgun.client({
   url: 'https://api.eu.mailgun.net',
   username: 'api',

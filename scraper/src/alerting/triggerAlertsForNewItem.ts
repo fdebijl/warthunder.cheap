@@ -1,6 +1,6 @@
 import { Item, MailNewItemFactory, findAlerts } from 'wtcheap.shared';
 
-import { clog } from '../index';
+import { clog } from '../index.js';
 
 export const triggerAlertsForItems = async (newItems: Item[]) => {
   clog.log(`Triggering availability alerts for ${newItems.length} new items`);

@@ -1,4 +1,4 @@
-import { EventType } from '../domain';
+import { EventType } from '../domain/index.js';
 
 const HUMAN_READABLE_EVENT_TYPES = {
   'priceChange': 'discount alert for this item',

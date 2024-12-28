@@ -1,12 +1,14 @@
 import puppeteer, { Page } from 'puppeteer';
-import { Item } from 'wtcheap.shared';
-
-import { PERMA_SALE_ITEM_IDS, SELECTORS } from '../constants';
-import { clog } from '../index';
+import { Item, SelectorSet } from 'wtcheap.shared';
 import { LOGLEVEL } from '@fdebijl/clog';
-import { isItemBuyable } from './isItemBuyable';
+import { milliseconds } from '@fdebijl/pog';
 
-export const deepCheckItem = async ({ item, page, skip404Check = false, skipPriceAssignment = false }: { item: Item, page?: Page, skip404Check?: boolean, skipPriceAssignment?: boolean }): Promise<Item> => {
+import { PERMA_SALE_ITEM_IDS } from '../constants.js';
+import { clog } from '../index.js';
+import { isItemBuyable } from './isItemBuyable.js';
+import { getDetailsOnPage } from './getDetailsOnPage.js';
+
+export const deepCheckItem = async ({ item, selectors, page, skip404Check = false, skipPriceAssignment = false }: { item: Item, selectors: SelectorSet, page?: Page, skip404Check?: boolean, skipPriceAssignment?: boolean }): Promise<Item> => {
   item = { ...item };
 
   if (!skip404Check) {
@@ -24,37 +26,20 @@ export const deepCheckItem = async ({ item, page, skip404Check = false, skipPric
     page = await browser.newPage();
   }
 
+  // TODO: During wayback runs the page will already be on the right url, so we can skip this step
   await page.goto(item.href, { waitUntil: 'networkidle2' });
-  await page.waitForSelector(SELECTORS.PAGE__DESCRIPTION);
 
-  // eslint-disable-next-line no-shadow -- Variables here get injected into the browser context so shadowing is not relevant
-  const priceInfo = await page.evaluate((SELECTORS) => {
-    const oldPriceEl = document.querySelector(SELECTORS.ITEM__OLD_PRICE);
-    const newPriceEl = document.querySelector(SELECTORS.ITEM__NEW_PRICE);
-    const defaultPriceEl = document.querySelector(SELECTORS.ITEM__DEFAULT_PRICE);
-    const media = [...document.querySelectorAll<HTMLDivElement>(SELECTORS.PAGE__MEDIA)].map((el) => el.dataset.fullSizeMediaUrl!);
-    const description = document.querySelector(SELECTORS.PAGE__DESCRIPTION)?.textContent?.trim();
+  await Promise.race([
+    milliseconds(30_000 - 10).then(() => { throw new Error('Could not find description during wait before getDetailsOnPage') }),
+    page.waitForSelector(selectors.PAGE__DESCRIPTION, { visible: false, timeout: 30_000 }),
+    page.waitForSelector(selectors.PAGE__SHORT_DESCRIPTION ?? selectors.PAGE__DESCRIPTION, { visible: false, timeout: 30_000 })
+  ]);
 
-    const stripCurrency = (price: string): number => {
-      if (!price) {
-        return 0;
-      }
+  const detailsInfo = await getDetailsOnPage({ page, selectors})
 
-      return Number(price.replace(/[^0-9.]/g, '').trim());
-    }
-
-    return {
-      oldPrice: stripCurrency(oldPriceEl?.textContent?.trim() as string),
-      newPrice: stripCurrency(newPriceEl?.textContent?.trim() as string),
-      defaultPrice: stripCurrency(defaultPriceEl?.textContent?.trim() as string),
-      media,
-      description
-    };
-  }, SELECTORS);
-
-  const { oldPrice, newPrice, media, description } = priceInfo;
+  const { oldPrice, newPrice, media, description } = detailsInfo;
   const isPermaSale = PERMA_SALE_ITEM_IDS.includes(item.id);
-  const defaultPrice = isPermaSale ? oldPrice : priceInfo.defaultPrice;
+  const defaultPrice = isPermaSale ? oldPrice : detailsInfo.defaultPrice;
   const isDiscounted = !!oldPrice && !!newPrice && oldPrice !== newPrice && !isPermaSale;
   const discountPercent = isDiscounted ? Math.round((1 - newPrice / oldPrice) * 100) : null;
 
@@ -68,6 +53,10 @@ export const deepCheckItem = async ({ item, page, skip404Check = false, skipPric
 
   if (!item.details) {
     item.details = {};
+  }
+
+  if (detailsInfo.shortDescription && !item.description) {
+    item.description = detailsInfo.shortDescription;
   }
 
   item.details.media = media;

@@ -1,7 +1,7 @@
 import { LOGLEVEL } from '@fdebijl/clog';
 import { connect } from 'wtcheap.shared';
 
-import { clog } from '../index';
+import { clog } from '../index.js';
 
 export const ensureIndices = async () => {
   const db = await connect();
