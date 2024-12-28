@@ -1,10 +1,9 @@
 Todo:
 - Website
-  - Toasts
   - Search
   - Filtering
   - SEO
-  - Alert Management
+  - Hide alert button if user already has an alert for this item
   - analytics.floris.amsterdam hookup?
 - API
   - Rate limiting
@@ -13,4 +12,6 @@ Todo:
   - Add other markdown files such as security/contributing for github purposes
 - Scraper
   - Split into two run types: hourly non-pricing runs and daily pricing runs: non-pricing runs do everything but enter a new Price, pricing runs do everything
-  - Save scraped image locally instead of hotlinking Gaijin's versions, in case they get deleted
+  - Save scraped image locally (to an NFS share, for example) instead of hotlinking Gaijin's versions, in case they get deleted
+  - Improve timings/reduce timeout duration for wayback scrapes
+  - Save all-404/no-memento items and skip those

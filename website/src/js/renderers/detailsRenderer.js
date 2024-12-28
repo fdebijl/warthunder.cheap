@@ -1,5 +1,5 @@
 import { ChartRenderer } from './chartRenderer.js';
-
+import { isAuthenticated } from '../util/authenticate.js';
 import { API_URL } from '../env.js';
 
 /** The DetailsRenderer handles populating the modal that shows when clicking 'View details' on an item card */
@@ -11,6 +11,18 @@ export class DetailsRenderer extends EventTarget {
 
     this.referalRenderer = referalRenderer;
     this.fullCapsNations = ['usa', 'ussr'];
+  }
+
+  get emailAddress() {
+    return localStorage.getItem('wtcheap-email');
+  }
+
+  get token() {
+    return localStorage.getItem('wtcheap-token');
+  }
+
+  get isAuthenticated() {
+    return isAuthenticated();
   }
 
   updateDetailsElement(data) {
@@ -79,7 +91,7 @@ export class DetailsRenderer extends EventTarget {
     if (data.source === 'archive') {
       const archiveWarning = document.createElement('p');
       archiveWarning.classList.add('details__archive-warning');
-      archiveWarning.textContent = 'The information about this item was scraped from The Internet Archive, not all information may be accurate or complete. The description may also not be in English.';
+      archiveWarning.textContent = 'The information about this item was scraped from The Internet Archive, not all information may be accurate or complete.';
       detailWrapper.appendChild(archiveWarning);
     }
 
@@ -113,7 +125,7 @@ export class DetailsRenderer extends EventTarget {
 
       let priceValue = data.defaultPrice;
 
-      if (this.referalRenderer) {
+      if (this.referalRenderer && data.category !== 'GoldenEagles') {
         priceValue *= this.referalRenderer.discountFactor;
       }
 
@@ -157,11 +169,15 @@ export class DetailsRenderer extends EventTarget {
     const actionsLeftAlert = document.createElement('div');
     actionsLeftAlert.classList.add('details__actions', 'margin-top-xs');
     const eventType = data.buyable ? 'priceChange' : 'itemAvailable';
+
     const emailInput = document.createElement('input');
     emailInput.type = 'email';
     emailInput.placeholder = 'Email address for alert';
     emailInput.classList.add('details__alert-email', 'jab');
-    actionsLeftAlert.appendChild(emailInput);
+
+    if (!this.isAuthenticated) {
+      actionsLeftAlert.appendChild(emailInput);
+    }
 
     const alertButton = document.createElement('a');
     alertButton.href = '#';
@@ -179,13 +195,18 @@ export class DetailsRenderer extends EventTarget {
     alertButton.addEventListener('click', (e) => {
       e.preventDefault();
 
+      const headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+
+      if (this.isAuthenticated) {
+        headers.append('Authorization', `Bearer ${this.token}`);
+      }
+
       fetch(`${API_URL}/alerts`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
-          recipient: emailInput.value,
+          recipient: this.isAuthenticated ? '' : emailInput.value,
           itemId: data.id,
           eventType,
         }),
@@ -198,6 +219,7 @@ export class DetailsRenderer extends EventTarget {
         }
 
         alertMessage.innerText = `Alert set, you will receive an email when the item is ${data.buyable ? 'discounted' : 'available'}`;
+        this.dispatchEvent(new Event('alert_set'));
       }).catch((e) => {
         alertMessage.classList.add('error');
         alertMessage.innerText = `Failed to set alert: ${e.message}`;

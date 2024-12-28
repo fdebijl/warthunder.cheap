@@ -1,0 +1,117 @@
+:root {
+  --grid-columns: 5;
+  --grid-gutter: 1.5dvw;
+  --item-width: 286.5px;
+  --item-min-height: 385px;
+  --item-max-height: 410px;
+}
+
+.itemcategory {
+  margin-top: 1rem;
+}
+
+.itemgrid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(var(--item-width), 1fr)
+  );
+  gap: var(--grid-gutter);
+  max-width: calc(
+    var(--item-width) * var(--grid-columns) +
+    var(--grid-gutter) * (var(--grid-columns) - 1)
+  );
+  margin: 0 auto;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: var(--item-width);
+  min-height: var(--item-min-height);
+  max-height: var(--item-max-height);
+  margin: 1rem;
+  background: #1A2028;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+.item > img {
+  max-height: 163px;
+}
+
+.item > img.lazyload,
+.item > img.lazyloading {
+  scale: 0.5;
+}
+
+.item .item__info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 1em;
+}
+
+.item__title {
+  font-size: 1.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.item__meta {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.item__price {
+  font-size: 2rem;
+  text-align: center;
+}
+
+.item__price.discounted {
+  color: rgba(0, 255, 0, 0.5);
+}
+
+.item__discount {
+  text-align: center;
+}
+
+.item__discount.normal {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.item__discount.discounted {
+  color: rgba(0, 255, 0, 0.3);
+}
+
+.item__actions {
+  display: flex;
+  width: 100%;
+}
+
+.item__actions > button,
+.item__actions > .button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1 1 auto;
+  color: #FFF;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: 'Fira Sans', sans-serif;
+  font-weight: 300;
+  padding: 1em 1em;
+  background: none;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 400ms;
+}
+
+.item__actions > button:hover {
+  background: #27323F;
+}
+
+.item__actions > button:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}

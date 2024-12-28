@@ -6,10 +6,7 @@
   <title>Warthunder.cheap | Warthunder Discount & Price alerts</title>
   <meta name="description" content="Warthunder.cheap tracks prices and availability for items on the War Thunder store. You can sign up to get alerts when items go on sale or when discontinued items are back in stock.">
 
-  <link rel="stylesheet" href="css/normalize.css">
-  <link rel="stylesheet" href="css/fonts.css">
-  <link rel="stylesheet" href="css/utils.css">
-  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/wtcheap.css">
 
   <script src="js/lib/lazysizes.min.js"></script>
   <script src="js/wtcheap.js" type="module"></script>
@@ -95,7 +92,7 @@
       </p>
 
       <div class="center">
-        <button class="dialog_close fab" data-dialog-id="about">Close</button>
+        <button class="dialog_close fab compact" data-dialog-id="about">Close</button>
       </div>
     </div>
   </dialog>
@@ -121,6 +118,11 @@
       </p>
 
       <p class="qa">
+        <span class="q">Does the 3% creator discount stack with normal discounts?</span>
+        <span class="a">No, it only applies to item that are not discounted, nor does it apply to golden eagle packs. In any event, you will still receive the decal if you don't already have it on your account.</span>
+      </p>
+
+      <p class="qa">
         <span class="q">Can I see the prices in USD?</span>
         <span class="a">As of 2025, USD and EUR prices in the War Thunder store are the same, so an item that's 60 euros will also be 60 dollars.</span>
       </p>
@@ -141,7 +143,7 @@
       </p>
 
       <div class="center">
-        <button class="dialog_close fab" data-dialog-id="faq">Close</button>
+        <button class="dialog_close fab compact" data-dialog-id="faq">Close</button>
       </div>
     </div>
   </dialog>
@@ -155,15 +157,17 @@
     <div class="dialog__wrapper">
       <h1>Manage Alerts</h1>
       <p class="margin-top-sm">
-        Here you can set up an alert for when new items become available in the War Thunder Store.
+        Here you can manage your current alerts and set up an alert for when new items become available in the War Thunder Store. <span class="alerts__identity"></span>
       </p>
 
-      <div class="alertgrid">
+      <span class="alerts__message center"></span>
+
+      <div class="alerts__wrapper">
         <!-- alertRenderer injects alerts here -->
       </div>
 
       <div class="center">
-        <button class="dialog_close fab" data-dialog-id="alerts">Close</button>
+        <button class="dialog_close fab compact" data-dialog-id="alerts">Close</button>
       </div>
     </div>
   </dialog>

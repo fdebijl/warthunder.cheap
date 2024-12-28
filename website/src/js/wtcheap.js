@@ -2,13 +2,16 @@ import { ItemRenderer } from './renderers/itemRenderer.js';
 import { DetailsRenderer } from './renderers/detailsRenderer.js';
 import { ReferalRenderer } from './renderers/referalRenderer.js';
 import { AlertRenderer } from './renderers/alertRenderer.js';
-import { ParamManager } from './paramManager.js';
-import { loadModals } from './modalLoader.js';
-import { loadHeader } from './headerLoader.js';
+import { ParamManager } from './util/paramManager.js';
+import { loadModals } from './util/loadModals.js';
+import { loadHeader } from './util/loadHeader.js';
+import { authenticate } from './util/authenticate.js';
 
 import { API_URL } from './env.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  await authenticate();
+
   const referalRenderer = new ReferalRenderer('#referal_code');
   referalRenderer.renderInto();
 
@@ -44,9 +47,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderer.appendTo('.itemcategory.archived .itemgrid');
   });
 
-  const alertRenderer = new AlertRenderer('#alerts .alertgrid');
+  const allItems = [...currentItems, ...archivedItems];
 
-  const paramManager = new ParamManager(referalRenderer, detailsRenderer, [...currentItems, ...archivedItems]);
+  const alertRenderer = new AlertRenderer('#alerts', allItems);
+  detailsRenderer.addEventListener('alert_set', () => alertRenderer.reloadAlerts());
+
+  const paramManager = new ParamManager(referalRenderer, detailsRenderer, allItems);
   paramManager.initParams();
   paramManager.bindEvents();
 
