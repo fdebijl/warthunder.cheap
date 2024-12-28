@@ -4,35 +4,27 @@ import { API_URL } from '../env.js';
 // adjust rows to show human-friendly eventType labels
 export class AlertRenderer {
   constructor(selector) {
-    this.container = document.querySelector(selector);
+    this.dialog = document.querySelector(selector);
+    this.container = document.querySelector('.alerts__wrapper');
+    this.identitySpan = this.dialog.querySelector('.alerts__identity');
+
     if (!this.container) {
       throw new Error(`Element with selector "${selector}" not found.`);
     }
 
-    this.token = new URLSearchParams(window.location.search).get('token');
-
-    if (!this.token) {
-      const token = localStorage.getItem('wtcheap-token');
-
-      if (token) {
-        this.token = token;
-      }
-    } else {
-      localStorage.setItem('wtcheap-token', this.token);
-
-      const url = new URL(window.location.href);
-      url.searchParams.delete('token');
-      window.history.replaceState({}, document.title, url);
-    }
+    this.token = localStorage.getItem('wtcheap-token');
+    this.email = localStorage.getItem('wtcheap-email');
 
     this.init();
   }
 
   async init() {
     if (!this.token) {
+      this.identitySpan.textContent = 'Request a login link below to get started.';
       this.renderLoginForm();
     } else {
-      await this.renderAlerts();
+      this.identitySpan.textContent = `You're currently logged in as ${this.email}`;
+      await this.reloadAlerts();
     }
   }
 
@@ -78,7 +70,7 @@ export class AlertRenderer {
     }
   }
 
-  async renderAlerts() {
+  async reloadAlerts() {
     try {
       const response = await fetch(`${API_URL}/alerts`, {
         headers: { Authorization: `Bearer ${this.token}` }
@@ -90,28 +82,75 @@ export class AlertRenderer {
       }
 
       const alerts = await response.json();
-      this.container.innerHTML = '';
-
-      alerts.forEach(alert => {
-        const alertRow = document.createElement('div');
-        alertRow.className = 'alert-row';
-
-        const alertText = document.createElement('span');
-        alertText.textContent = `Alert: ${alert.eventType} for Item ID: ${alert.itemId}`;
-
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', async () => {
-          await this.deleteAlert(alert._id);
-        });
-
-        alertRow.appendChild(alertText);
-        alertRow.appendChild(deleteButton);
-        this.container.appendChild(alertRow);
-      });
+      this.renderAlertsTable(alerts);
     } catch (error) {
       console.error('Error fetching alerts:', error);
       alert('An error occurred while fetching alerts.');
+    }
+  }
+
+  renderAlertsTable(alerts) {
+    this.container.innerHTML = '';
+
+    if (alerts.length === 0) {
+      const noAlertsMessage = document.createElement('p');
+      noAlertsMessage.textContent = 'You currently have no alerts.';
+      this.container.appendChild(noAlertsMessage);
+      return;
+    }
+
+    const table = document.createElement('table');
+    table.classList.add('alerts__table');
+
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Event Type</th>
+        <th>Item ID</th>
+        <th>Actions</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    alerts.forEach(alert => {
+      const row = document.createElement('tr');
+
+      const eventTypeCell = document.createElement('td');
+      eventTypeCell.textContent = this.getHumanFriendlyEventType(alert.eventType);
+      row.appendChild(eventTypeCell);
+
+      const itemIdCell = document.createElement('td');
+      itemIdCell.textContent = alert.itemId || 'N/A';
+      row.appendChild(itemIdCell);
+
+      const actionsCell = document.createElement('td');
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.addEventListener('click', async () => {
+        await this.deleteAlert(alert._id);
+      });
+      actionsCell.appendChild(deleteButton);
+      row.appendChild(actionsCell);
+
+      tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
+    this.container.appendChild(table);
+  }
+
+  getHumanFriendlyEventType(eventType) {
+    switch (eventType) {
+      case 'priceChange':
+        return 'Price Change';
+      case 'itemAvailable':
+        return 'Item Available';
+      case 'newItem':
+        return 'New Item';
+      default:
+        return 'Unknown';
     }
   }
 
@@ -124,7 +163,7 @@ export class AlertRenderer {
 
       if (response.ok) {
         alert('Alert deleted successfully.');
-        await this.renderAlerts();
+        await this.reloadAlerts();
       } else {
         alert('Failed to delete alert. Please try again later.');
       }

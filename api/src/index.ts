@@ -44,6 +44,12 @@ app.get(`/${PATH_PREFIX}/${API_VERSION}/prices/:itemId`, async (req, res) => {
 });
 
 app.post(`/${PATH_PREFIX}/${API_VERSION}/alerts`, async (req, res) => {
+  const user = authenticateToken(req);
+
+  if (user) {
+    req.body.recipient = user.sub;
+  }
+
   if (!req.body.recipient) {
     res.status(400).send(JSON.stringify({ message: 'Email address is required' }));
     return;
@@ -133,6 +139,17 @@ app.post(`/${PATH_PREFIX}/${API_VERSION}/tokens/request`, async (req, res) => {
     clog.log(`Error sending token email: ${error}`, LOGLEVEL.ERROR);
     res.status(500).send(JSON.stringify({ message: 'Failed to send token email' }));
   }
+});
+
+app.get(`/${PATH_PREFIX}/${API_VERSION}/tokens/whoami`, async (req, res) => {
+  const user = authenticateToken(req);
+
+  if (!user) {
+    res.status(401).send(JSON.stringify({ message: 'Unauthorized' }));
+    return;
+  }
+
+  res.status(200).send(JSON.stringify({ email: user.sub }));
 });
 
 app.listen(PORT, () => {
