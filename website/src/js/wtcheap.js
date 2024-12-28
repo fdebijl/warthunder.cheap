@@ -47,10 +47,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderer.appendTo('.itemcategory.archived .itemgrid');
   });
 
-  const alertRenderer = new AlertRenderer('#alerts');
+  const allItems = [...currentItems, ...archivedItems];
+
+  const alertRenderer = new AlertRenderer('#alerts', allItems);
   detailsRenderer.addEventListener('alert_set', () => alertRenderer.reloadAlerts());
 
-  const paramManager = new ParamManager(referalRenderer, detailsRenderer, [...currentItems, ...archivedItems]);
+  const paramManager = new ParamManager(referalRenderer, detailsRenderer, allItems);
   paramManager.initParams();
   paramManager.bindEvents();
 
@@ -61,6 +63,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     element.classList.remove('fadeloading');
     element.classList.add('fadeloaded');
   });
+
+  // TODO: REMOVE BEFORE FLIGHT
+  // document.querySelector('#alerts').showModal();
 });
 
 document.querySelectorAll('.navtab').forEach((tab) => {

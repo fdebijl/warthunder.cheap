@@ -11,8 +11,7 @@ export const triggerAlertsForItems = async (newItems: Item[]) => {
     const factory = new MailNewItemFactory(alert, newItems);
 
     await factory.generate()
-      .then(f => f.send())
-      .then(f => f.cleanup());
+      .then(f => f.send());
   }
 
   return;

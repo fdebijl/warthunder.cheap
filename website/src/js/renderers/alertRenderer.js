@@ -3,10 +3,20 @@ import { API_URL } from '../env.js';
 // TODO: Finish implementing this class, add styling, add in-dialog error messaging, add newItem alert signup
 // adjust rows to show human-friendly eventType labels
 export class AlertRenderer {
-  constructor(selector) {
+  dialog;
+  container;
+  identitySpan;
+  token;
+  items;
+  alerts;
+  
+
+  constructor(selector, items) {
     this.dialog = document.querySelector(selector);
     this.container = document.querySelector('.alerts__wrapper');
     this.identitySpan = this.dialog.querySelector('.alerts__identity');
+
+    this.items = items;
 
     if (!this.container) {
       throw new Error(`Element with selector "${selector}" not found.`);
@@ -16,6 +26,10 @@ export class AlertRenderer {
     this.email = localStorage.getItem('wtcheap-email');
 
     this.init();
+  }
+
+  get isAuthenticated() {
+    return !!this.token;
   }
 
   async init() {
@@ -81,8 +95,8 @@ export class AlertRenderer {
         return;
       }
 
-      const alerts = await response.json();
-      this.renderAlertsTable(alerts);
+      this.alerts = await response.json();
+      this.renderAlertsTable(this.alerts);
     } catch (error) {
       console.error('Error fetching alerts:', error);
       alert('An error occurred while fetching alerts.');
@@ -91,6 +105,78 @@ export class AlertRenderer {
 
   renderAlertsTable(alerts) {
     this.container.innerHTML = '';
+
+    const alertMessage = document.createElement('p');
+    alertMessage.classList.add('alerts__message');
+    this.container.appendChild(alertMessage);
+
+    const globalAlertToggleContainer = document.createElement('div');
+    globalAlertToggleContainer.classList.add('alerts__global-toggle');
+
+    const newItemAlert = alerts.find(alert => alert.eventType === 'newItem');
+    const globalAlertToggle = document.createElement('input');
+    globalAlertToggle.type = 'checkbox';
+    globalAlertToggle.checked = !!newItemAlert;
+    globalAlertToggle.addEventListener('change', async (e) => {
+      e.preventDefault();
+
+      const headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+
+      if (this.isAuthenticated) {
+        headers.append('Authorization', `Bearer ${this.token}`);
+      }
+
+      if (globalAlertToggle.checked) {
+        fetch(`${API_URL}/alerts`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            recipient: this.email,
+            eventType: 'newItem'
+          }),
+        }).then(async (res) => {
+          const body = await res.json();
+          return { body, res };
+        }).then(({ body, res }) => {
+          if (!res.ok || res.status < 200 || res.status >= 300) {
+            throw new Error(body.message);
+          }
+
+          alertMessage.classList.remove('error');
+          alertMessage.classList.add('success');
+          alertMessage.innerText = `Alert set, you will receive an email every time new items are added to the War Thunder store`;
+
+          setTimeout(() => {
+            this.reloadAlerts();
+          }, 5000);
+        }).catch((e) => {
+          alertMessage.classList.add('error');
+          alertMessage.innerText = `Failed to set alert: ${e.message}`;
+        });
+      } else {
+        if (newItemAlert) {
+          await this.deleteAlert(newItemAlert._id);
+
+          setTimeout(() => {
+            this.reloadAlerts();
+          }, 5000);
+        }
+      }
+    });
+
+    const globalAlertToggleLabel = document.createElement('label');
+    globalAlertToggleLabel.textContent = 'Enable alert for new items.';
+
+    globalAlertToggleContainer.appendChild(globalAlertToggle);
+    globalAlertToggleContainer.appendChild(globalAlertToggleLabel);
+    this.container.appendChild(globalAlertToggleContainer);
+
+    const alertsHeader = document.createElement('h2');
+    alertsHeader.textContent = 'Your Alerts';
+    this.container.appendChild(alertsHeader);
+
+    // TODO: Add an error/success message area
 
     if (alerts.length === 0) {
       const noAlertsMessage = document.createElement('p');
@@ -105,7 +191,9 @@ export class AlertRenderer {
     const thead = document.createElement('thead');
     thead.innerHTML = `
       <tr>
-        <th>Event Type</th>
+        <th></th>
+        <th>Item name</th>
+        <th>Event type</th>
         <th>Item ID</th>
         <th>Actions</th>
       </tr>
@@ -115,7 +203,35 @@ export class AlertRenderer {
     const tbody = document.createElement('tbody');
 
     alerts.forEach(alert => {
+      if (alert.eventType === 'newItem') {
+        return;
+      }
+
+      const item = this.items.find(item => item.id === alert.itemId);
+
       const row = document.createElement('tr');
+      row.classList.add('alerts__row');
+
+      if (item) {
+        const posterCell = document.createElement('td');
+        const posterImage = document.createElement('img');
+        posterImage.src = item.poster;
+        posterImage.alt = `${item.name} thumbnail`;
+        posterImage.classList.add('alerts__poster');
+        posterCell.appendChild(posterImage);
+        row.appendChild(posterCell);
+
+        const itemNameCell = document.createElement('td');
+        itemNameCell.textContent = item.title;
+        row.appendChild(itemNameCell);
+      } else {
+        const posterCell = document.createElement('td');
+        row.appendChild(posterCell);
+
+        const itemNameCell = document.createElement('td');
+        itemNameCell.textContent = 'N/A';
+        row.appendChild(itemNameCell);
+      }
 
       const eventTypeCell = document.createElement('td');
       eventTypeCell.textContent = this.getHumanFriendlyEventType(alert.eventType);
@@ -128,6 +244,7 @@ export class AlertRenderer {
       const actionsCell = document.createElement('td');
       const deleteButton = document.createElement('button');
       deleteButton.textContent = 'Delete';
+      deleteButton.classList.add('fab', 'compact', 'dangerous');
       deleteButton.addEventListener('click', async () => {
         await this.deleteAlert(alert._id);
       });
@@ -144,11 +261,11 @@ export class AlertRenderer {
   getHumanFriendlyEventType(eventType) {
     switch (eventType) {
       case 'priceChange':
-        return 'Price Change';
+        return 'Price change';
       case 'itemAvailable':
-        return 'Item Available';
+        return 'Item available';
       case 'newItem':
-        return 'New Item';
+        return 'New item';
       default:
         return 'Unknown';
     }

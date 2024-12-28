@@ -4,6 +4,7 @@ Todo:
   - Filtering
   - SEO
   - Hide alert button if user already has an alert for this item
+  - Fix buttons in the itemgrid overflowing when the item title is two lines
   - analytics.floris.amsterdam hookup?
 - API
   - Rate limiting

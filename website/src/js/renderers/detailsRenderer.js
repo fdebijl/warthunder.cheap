@@ -125,7 +125,7 @@ export class DetailsRenderer extends EventTarget {
 
       let priceValue = data.defaultPrice;
 
-      if (this.referalRenderer) {
+      if (this.referalRenderer && data.category !== 'GoldenEagles') {
         priceValue *= this.referalRenderer.discountFactor;
       }
 

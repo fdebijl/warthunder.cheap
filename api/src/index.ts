@@ -48,6 +48,9 @@ app.post(`/${PATH_PREFIX}/${API_VERSION}/alerts`, async (req, res) => {
 
   if (user) {
     req.body.recipient = user.sub;
+  } else if (req.body.eventType === 'newItem') {
+    res.status(401).send(JSON.stringify({ message: 'Unauthorized' }));
+    return;
   }
 
   if (!req.body.recipient) {
