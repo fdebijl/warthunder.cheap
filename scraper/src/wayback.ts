@@ -131,7 +131,7 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
   clog.log(`Scraping root ${root.url} (${root.datetime.toISOString()})`, LOGLEVEL.DEBUG);
 
   const items = await getCurrentItems({ targetRoots: [root.url], slowMode: true, ignoreDiscounts: true, skipDeepCheck: true });
-  const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox'], defaultViewport: { width: 1280, height: 720 } });
+  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
   const page = await browser.pages().then((pages) => pages[0]);
   page.setDefaultNavigationTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
   page.setDefaultTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
