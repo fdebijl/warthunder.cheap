@@ -1,0 +1,109 @@
+@import url('./itemgrid.css');
+@import url('./details.css');
+
+/* Floating Action Button */
+.fab {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #FFF;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: 'Fira Sans', sans-serif;
+  font-weight: 300;
+  font-size: 14pt;
+  padding: 0.8em 1.6em;
+  background: none;
+  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  transition: all 400ms;
+}
+
+.fab:hover {
+  background: #27323F;
+}
+
+/* Joined Action Button */
+*:has(> .jab) {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  flex-flow: row nowrap;
+}
+
+.jab {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #FFF;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: 'Fira Sans', sans-serif;
+  font-weight: 300;
+  padding: 0.8em 1em;
+  background: none;
+  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 400ms;
+}
+
+.jab:hover {
+  background: #27323F;
+}
+
+.jab:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.jab:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.jab:not(:last-child) {
+  border-right-width: 0px;
+}
+
+.button.primary,
+.fab.primary,
+.jab.primary {
+  background: hsl(10, 70%, 40%);
+}
+
+.button.primary:hover,
+.fab.primary:hover,
+.jab.primary:hover {
+  background: hsl(10, 75%, 30%);
+}
+
+.button.secondary,
+.fab.secondary,
+.jab.secondary {
+  background: hsl(213, 30%, 30%);
+}
+
+.button.secondary:hover,
+.fab.secondary:hover,
+.jab.secondary:hover {
+  background: hsl(213, 30%, 20%);
+}
+
+.qa {
+  display: flex;
+  flex-flow: column nowrap;
+  margin-top: 1em;
+  font-size: 13pt;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.qa .q,
+.qa .a {
+  white-space: pre-line;
+}
+
+.qa .q {
+  font-weight: bold;
+}
