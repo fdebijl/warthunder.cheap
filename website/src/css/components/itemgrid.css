@@ -2,7 +2,8 @@
   --grid-columns: 5;
   --grid-gutter: 1.5dvw;
   --item-width: 286.5px;
-  --item-height: 385px;
+  --item-min-height: 385px;
+  --item-max-height: 410px;
 }
 
 .itemcategory {
@@ -28,7 +29,8 @@
   flex-direction: column;
   position: relative;
   width: var(--item-width);
-  height: var(--item-height);
+  min-height: var(--item-min-height);
+  max-height: var(--item-max-height);
   margin: 1rem;
   background: #1A2028;
   border-radius: 6px;
