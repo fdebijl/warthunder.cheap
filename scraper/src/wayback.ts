@@ -118,6 +118,7 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
 
     // TODO: Insert price
     // TODO: Backdate createdAt, make sure this only happens once for every item
+    // TODO: Store poster and media in a NFS volume so the website can display it
 
     return deepCheckedItem;
   } catch (e) {

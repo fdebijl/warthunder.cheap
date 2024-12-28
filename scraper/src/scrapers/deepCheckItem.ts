@@ -7,7 +7,6 @@ import { PERMA_SALE_ITEM_IDS } from '../constants.js';
 import { clog } from '../index.js';
 import { isItemBuyable } from './isItemBuyable.js';
 import { getDetailsOnPage } from './getDetailsOnPage.js';
-import { findInFrames } from './findInFrames.js';
 
 export const deepCheckItem = async ({ item, selectors, page, skip404Check = false, skipPriceAssignment = false }: { item: Item, selectors: SelectorSet, page?: Page, skip404Check?: boolean, skipPriceAssignment?: boolean }): Promise<Item> => {
   item = { ...item };
@@ -29,11 +28,6 @@ export const deepCheckItem = async ({ item, selectors, page, skip404Check = fals
 
   // TODO: During wayback runs the page will already be on the right url, so we can skip this step
   await page.goto(item.href, { waitUntil: 'networkidle2' });
-
-  const shortDescriptionOnPage = selectors.PAGE__SHORT_DESCRIPTION ? await page.$(selectors.PAGE__SHORT_DESCRIPTION) : null;
-  const shortDescriptionInFrames = await findInFrames(page, selectors.PAGE__SHORT_DESCRIPTION!);
-
-  clog.log(`Short description on page: ${!!shortDescriptionOnPage}, in frames: ${!!shortDescriptionInFrames}`, LOGLEVEL.DEBUG);
 
   await Promise.race([
     milliseconds(30_000 - 10).then(() => { throw new Error('Could not find description during wait before getDetailsOnPage') }),
