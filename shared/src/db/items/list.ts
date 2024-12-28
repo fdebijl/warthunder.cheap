@@ -1,7 +1,7 @@
 import { WithId } from 'mongodb';
 
-import { Item } from '../../domain';
-import { connect } from '../connect';
+import { Item } from '../../domain/index.js';
+import { connect } from '../connect.js';
 
 export const listItems = async (): Promise<Item[]> => {
   const db = await connect();

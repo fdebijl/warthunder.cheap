@@ -1,8 +1,8 @@
 import { Page } from 'puppeteer';
+import { SelectorSet } from 'wtcheap.shared';
 
-import { SelectorSet } from '../domain';
-import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from '../constants';
-import { clog } from '../index';
+import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from '../constants.js';
+import { clog } from '../index.js';
 
 type DetailsInfo = {
   oldPrice: number;

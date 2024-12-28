@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 
-import { Alert, EventType } from '../../domain';
-import { connect } from '../connect';
+import { Alert, EventType } from '../../domain/index.js';
+import { connect } from '../connect.js';
 
 type FindAlertsQuery = {
   _id?: ObjectId;

@@ -1,7 +1,8 @@
 import { Browser } from 'puppeteer';
-import { getArchiveSnapshots } from './getArchiveSnapshots';
-import { clog } from '..';
 import { LOGLEVEL } from '@fdebijl/clog';
+
+import { getArchiveSnapshots } from './getArchiveSnapshots.js';
+import { clog } from '../index.js';
 
 export const findNon404Memento = async (url: string, browser: Browser): Promise<{ url: string; datetime: Date; } | null> => {
   const mementos = await getArchiveSnapshots(url);

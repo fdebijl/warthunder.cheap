@@ -1,4 +1,4 @@
-import { Memento } from '../domain';
+import { Memento } from 'wtcheap.shared';
 
 /**
  * Parse a application/link-format response into a JS object

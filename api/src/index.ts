@@ -13,9 +13,9 @@ import {
   deleteAlert
 } from 'wtcheap.shared';
 
-import { API_VERSION, PATH_PREFIX, PORT, JWT_SECRET } from './constants';
-import { triggerTokenEmail } from './alerting/triggerTokenEmail';
-import { authenticateToken } from './util/authenticateToken';
+import { API_VERSION, PATH_PREFIX, PORT, JWT_SECRET } from './constants.js';
+import { triggerTokenEmail } from './alerting/triggerTokenEmail.js';
+import { authenticateToken } from './util/authenticateToken.js';
 
 const clog = new Clog();
 

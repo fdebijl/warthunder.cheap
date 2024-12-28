@@ -1,4 +1,4 @@
-import { connect } from '../connect';
+import { connect } from '../connect.js';
 
 export const alertExists = async (recipient: string, eventType: string, itemId?: string): Promise<boolean> => {
   const db = await connect();

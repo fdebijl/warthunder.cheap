@@ -1,7 +1,7 @@
-import { Alert, Item, Mail, MailFactory } from '../domain';
-import { deleteAlert } from '../db/alerts';
-import { sendEmail } from '../mailgun';
-import { generateFooter, generateHeader } from './templates';
+import { Alert, Item, Mail, MailFactory } from '../domain/index.js';
+import { deleteAlert } from '../db/index.js';
+import { sendEmail } from '../mailgun.js';
+import { generateFooter, generateHeader } from './templates.js';
 
 export class MailDiscountFactory implements MailFactory {
   private alert;

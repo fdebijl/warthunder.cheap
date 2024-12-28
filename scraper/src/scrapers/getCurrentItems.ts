@@ -3,11 +3,10 @@ import { milliseconds } from '@fdebijl/pog';
 import { LOGLEVEL } from '@fdebijl/clog';
 import { Item } from 'wtcheap.shared';
 
-import { clog } from '../index';
-import { Item } from '../domain';
-import { deepCheckItem } from './deepCheckItem';
-import { getItemsOnPage } from './getItemsOnPage';
-import { matchSelectors } from './matchSelectors';
+import { clog } from '../index.js';
+import { deepCheckItem } from './deepCheckItem.js';
+import { getItemsOnPage } from './getItemsOnPage.js';
+import { matchSelectors } from './matchSelectors.js';
 
 // TODO: Extend documentation for parameters
 // TODO: Get rid of slowMode in favor of waitForSelectors

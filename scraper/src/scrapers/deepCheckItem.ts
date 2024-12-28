@@ -1,14 +1,13 @@
 import puppeteer, { Page } from 'puppeteer';
 import { Item, SelectorSet } from 'wtcheap.shared';
-
-import { Item, SelectorSet } from '../domain';
-import { PERMA_SALE_ITEM_IDS } from '../constants';
-import { clog } from '../index';
 import { LOGLEVEL } from '@fdebijl/clog';
-import { isItemBuyable } from './isItemBuyable';
-import { getDetailsOnPage } from './getDetailsOnPage';
-import { milliseconds, seconds } from '@fdebijl/pog';
-import { findInFrames } from './findInFrames';
+import { milliseconds } from '@fdebijl/pog';
+
+import { PERMA_SALE_ITEM_IDS } from '../constants.js';
+import { clog } from '../index.js';
+import { isItemBuyable } from './isItemBuyable.js';
+import { getDetailsOnPage } from './getDetailsOnPage.js';
+import { findInFrames } from './findInFrames.js';
 
 export const deepCheckItem = async ({ item, selectors, page, skip404Check = false, skipPriceAssignment = false }: { item: Item, selectors: SelectorSet, page?: Page, skip404Check?: boolean, skipPriceAssignment?: boolean }): Promise<Item> => {
   item = { ...item };

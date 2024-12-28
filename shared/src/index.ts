@@ -1,7 +1,7 @@
 import { Clog, LOGLEVEL } from '@fdebijl/clog';
 
-export * from './db';
-export * from './mailfactory';
-export * from './domain';
+export * from './db/index.js';
+export * from './mailfactory/index.js';
+export * from './domain/index.js';
 
 export const clog = new Clog(LOGLEVEL.DEBUG);

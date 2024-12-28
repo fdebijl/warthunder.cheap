@@ -1,2 +1,2 @@
-export * from './list';
-export * from './upsert';
+export * from './list.js';
+export * from './upsert.js';

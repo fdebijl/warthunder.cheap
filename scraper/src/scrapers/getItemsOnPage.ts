@@ -1,9 +1,9 @@
 import { Page } from 'puppeteer';
 import { LOGLEVEL } from '@fdebijl/clog';
+import { Item, SelectorSet } from 'wtcheap.shared';
 
-import { PERMA_SALE_ITEM_IDS, SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from '../constants';
-import { Item, SelectorSet } from '../domain';
-import { clog } from '../index';
+import { PERMA_SALE_ITEM_IDS, SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from '../constants.js';
+import { clog } from '../index.js';
 
 export const getItemsOnPage = async ({ page, selectors, category, ignoreDiscounts }: { page: Page, selectors: SelectorSet, category: Item['category'], ignoreDiscounts: boolean }): Promise<Item[]> => {
   switch (selectors) {

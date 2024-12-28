@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
-import { JWT_SECRET } from '../constants';
+import { JWT_SECRET } from '../constants.js';
 
 export const authenticateToken = (req: Request): string | JwtPayload | null => {
   const authHeader = req.headers['authorization'];

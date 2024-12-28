@@ -2,6 +2,7 @@
   "name": "wtcheap.scraper",
   "private": true,
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "compile": "tsc",
     "lint": "eslint \"./src/**/*.ts\" --max-warnings 10",

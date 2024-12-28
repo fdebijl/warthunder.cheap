@@ -1,14 +1,12 @@
 import puppeteer, { Page } from 'puppeteer';
 import { LOGLEVEL } from '@fdebijl/clog';
 import { Item, upsertItem } from 'wtcheap.shared';
-import { franc} from 'franc';
+import { franc } from 'franc';
 
-import { deepCheckItem, findNon404Memento, getCurrentItems, isItemBuyable, matchSelectors } from './scrapers';
-import { upsertItem } from './db';
-import { Item } from './domain';
-import { clog } from './index';
-import { getArchiveSnapshots } from './scrapers/getArchiveSnapshots';
-import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants';
+import { deepCheckItem, findNon404Memento, getCurrentItems, isItemBuyable, matchSelectors } from './scrapers/index.js';
+import { clog } from './index.js';
+import { getArchiveSnapshots } from './scrapers/getArchiveSnapshots.js';
+import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants.js';
 
 const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
 

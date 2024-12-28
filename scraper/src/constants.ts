@@ -1,5 +1,5 @@
+import { SelectorSet } from 'wtcheap.shared';
 import dotenv from 'dotenv';
-import { SelectorSet } from './domain';
 dotenv.config();
 
 export const TARGET_ROOTS = [
@@ -76,8 +76,3 @@ export const SHOP_2016_SELECTORS: SelectorSet = {
   PAGE__DESCRIPTION: '.inner__description-block .item-col-left',
   PAGE__SHORT_DESCRIPTION: '.inner__description li'
 } satisfies SelectorSet;
-
-export const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/wtcheap';
-export const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY as string;
-export const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN as string;
-export const MAILGUN_SENDER = process.env.MAILGUN_SENDER || 'noreply@warthunder.cheap';

@@ -1,5 +1,5 @@
-import { Alert } from '../../domain';
-import { connect } from '../connect';
+import { Alert } from '../../domain/index.js';
+import { connect } from '../connect.js';
 
 export const insertAlert = async (alert: Alert): Promise<void> => {
   const db = await connect();

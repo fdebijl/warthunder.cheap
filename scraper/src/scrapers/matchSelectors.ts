@@ -1,7 +1,8 @@
 import { Page } from 'puppeteer';
-import { SelectorSet } from '../domain';
-import { SHOP_2022_SELECTORS, SHOP_2021_SELECTORS, SHOP_2016_SELECTORS } from '../constants';
+import { SelectorSet } from 'wtcheap.shared';
 import { milliseconds } from '@fdebijl/pog';
+
+import { SHOP_2022_SELECTORS, SHOP_2021_SELECTORS, SHOP_2016_SELECTORS } from '../constants.js';
 
 const MATCH_TIMEOUT = 30_000;
 
