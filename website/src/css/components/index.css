@@ -24,7 +24,7 @@
 .fab.compact {
   font-size: 12pt;
   padding: 0.6em 1.2em;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .fab:hover {

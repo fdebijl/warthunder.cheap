@@ -1,7 +1,5 @@
 import { API_URL } from '../env.js';
 
-// TODO: Finish implementing this class, add styling, add in-dialog error messaging, add newItem alert signup
-// adjust rows to show human-friendly eventType labels
 export class AlertRenderer {
   dialog;
   container;
@@ -9,12 +7,13 @@ export class AlertRenderer {
   token;
   items;
   alerts;
-  
+
 
   constructor(selector, items) {
     this.dialog = document.querySelector(selector);
     this.container = document.querySelector('.alerts__wrapper');
     this.identitySpan = this.dialog.querySelector('.alerts__identity');
+    this.messageSpan = this.dialog.querySelector('.alerts__message');
 
     this.items = items;
 
@@ -42,6 +41,21 @@ export class AlertRenderer {
     }
   }
 
+  showMessage(message, isError = false, timeout = 10_000) {
+    this.messageSpan.textContent = message;
+
+    if (isError) {
+      this.messageSpan.classList.add('error');
+    } else {
+      this.messageSpan.classList.add('success');
+    }
+
+    setTimeout(() => {
+      this.messageSpan.textContent = '';
+      this.messageSpan.classList.remove('error', 'success');
+    }, timeout);
+  }
+
   renderLoginForm() {
     this.container.innerHTML = '';
 
@@ -49,15 +63,19 @@ export class AlertRenderer {
     emailInput.type = 'email';
     emailInput.placeholder = 'Enter your email';
     emailInput.id = 'emailInput';
+    emailInput.classList.add('jab');
 
     const requestButton = document.createElement('button');
     requestButton.textContent = 'Request Access';
+    requestButton.classList.add('jab', 'primary');
     requestButton.addEventListener('click', async () => {
       const email = emailInput.value.trim();
+
       if (!email) {
-        alert('Please enter a valid email address.');
+        this.showMessage('Please enter a valid email address.', true);
         return;
       }
+
       await this.requestToken(email);
     });
 
@@ -74,13 +92,13 @@ export class AlertRenderer {
       });
 
       if (response.ok) {
-        alert('A link has been sent to your email.');
+        this.showMessage('A link has been sent to your email.');
       } else {
-        alert('Failed to request token. Please try again later.');
+        this.showMessage('Failed to request token. Please try again later.', true);
       }
     } catch (error) {
       console.error('Error requesting token:', error);
-      alert('An error occurred while requesting the token.');
+      this.showMessage('An error occurred while requesting the token.', true);
     }
   }
 
@@ -91,7 +109,7 @@ export class AlertRenderer {
       });
 
       if (!response.ok) {
-        alert('Failed to fetch alerts. Please check your token or try again later.');
+        this.showMessage('Failed to fetch alerts. Please check your token or try again later.', true);
         return;
       }
 
@@ -99,16 +117,14 @@ export class AlertRenderer {
       this.renderAlertsTable(this.alerts);
     } catch (error) {
       console.error('Error fetching alerts:', error);
-      alert('An error occurred while fetching alerts.');
+      this.showMessage('An error occurred while fetching alerts.', true);
     }
   }
 
   renderAlertsTable(alerts) {
     this.container.innerHTML = '';
 
-    const alertMessage = document.createElement('p');
-    alertMessage.classList.add('alerts__message');
-    this.container.appendChild(alertMessage);
+    const visibleAlerts = alerts.filter(alert => alert.eventType !== 'newItem');
 
     const globalAlertToggleContainer = document.createElement('div');
     globalAlertToggleContainer.classList.add('alerts__global-toggle');
@@ -143,20 +159,20 @@ export class AlertRenderer {
             throw new Error(body.message);
           }
 
-          alertMessage.classList.remove('error');
-          alertMessage.classList.add('success');
-          alertMessage.innerText = `Alert set, you will receive an email every time new items are added to the War Thunder store`;
+          this.showMessage(`Alert set, you will receive an email every time new items are added to the War Thunder store`);
 
           setTimeout(() => {
             this.reloadAlerts();
           }, 5000);
         }).catch((e) => {
-          alertMessage.classList.add('error');
-          alertMessage.innerText = `Failed to set alert: ${e.message}`;
+          console.error('Failed to set alert:', e);
+          this.showMessage(`Failed to set alert: ${e.message}`, true);
         });
       } else {
         if (newItemAlert) {
           await this.deleteAlert(newItemAlert._id);
+
+          this.showMessage('Alert removed successfully.');
 
           setTimeout(() => {
             this.reloadAlerts();
@@ -166,7 +182,7 @@ export class AlertRenderer {
     });
 
     const globalAlertToggleLabel = document.createElement('label');
-    globalAlertToggleLabel.textContent = 'Enable alert for new items.';
+    globalAlertToggleLabel.textContent = 'Enable alert for new items';
 
     globalAlertToggleContainer.appendChild(globalAlertToggle);
     globalAlertToggleContainer.appendChild(globalAlertToggleLabel);
@@ -176,9 +192,7 @@ export class AlertRenderer {
     alertsHeader.textContent = 'Your Alerts';
     this.container.appendChild(alertsHeader);
 
-    // TODO: Add an error/success message area
-
-    if (alerts.length === 0) {
+    if (visibleAlerts.length === 0) {
       const noAlertsMessage = document.createElement('p');
       noAlertsMessage.textContent = 'You currently have no alerts.';
       this.container.appendChild(noAlertsMessage);
@@ -202,11 +216,7 @@ export class AlertRenderer {
 
     const tbody = document.createElement('tbody');
 
-    alerts.forEach(alert => {
-      if (alert.eventType === 'newItem') {
-        return;
-      }
-
+    visibleAlerts.forEach(alert => {
       const item = this.items.find(item => item.id === alert.itemId);
 
       const row = document.createElement('tr');
@@ -279,14 +289,16 @@ export class AlertRenderer {
       });
 
       if (response.ok) {
-        alert('Alert deleted successfully.');
+        this.showMessage('Alert deleted successfully.');
         await this.reloadAlerts();
       } else {
-        alert('Failed to delete alert. Please try again later.');
+        const body = await response.json();
+        console.error('Failed to delete alert:', response, body);
+        this.showMessage('Failed to delete alert. Please try again later.', true);
       }
     } catch (error) {
       console.error('Error deleting alert:', error);
-      alert('An error occurred while deleting the alert.');
+      this.showMessage('An error occurred while deleting the alert.', true);
     }
   }
 }

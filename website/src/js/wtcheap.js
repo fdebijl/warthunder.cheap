@@ -63,9 +63,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     element.classList.remove('fadeloading');
     element.classList.add('fadeloaded');
   });
-
-  // TODO: REMOVE BEFORE FLIGHT
-  // document.querySelector('#alerts').showModal();
 });
 
 document.querySelectorAll('.navtab').forEach((tab) => {

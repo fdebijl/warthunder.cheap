@@ -170,11 +170,12 @@ export class DetailsRenderer extends EventTarget {
     actionsLeftAlert.classList.add('details__actions', 'margin-top-xs');
     const eventType = data.buyable ? 'priceChange' : 'itemAvailable';
 
+    const emailInput = document.createElement('input');
+    emailInput.type = 'email';
+    emailInput.placeholder = 'Email address for alert';
+    emailInput.classList.add('details__alert-email', 'jab');
+
     if (!this.isAuthenticated) {
-      const emailInput = document.createElement('input');
-      emailInput.type = 'email';
-      emailInput.placeholder = 'Email address for alert';
-      emailInput.classList.add('details__alert-email', 'jab');
       actionsLeftAlert.appendChild(emailInput);
     }
 
@@ -205,7 +206,7 @@ export class DetailsRenderer extends EventTarget {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          recipient: emailInput.value,
+          recipient: this.isAuthenticated ? '' : emailInput.value,
           itemId: data.id,
           eventType,
         }),
