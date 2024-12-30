@@ -18,8 +18,12 @@ export class ItemRenderer {
     itemDiv.classList.add('item', `item-category-${this.data.category}`);
     itemDiv.setAttribute('data-item-id', this.data.id);
 
+    const posterName = this.data.poster.split('/').pop();
+    const fallbackSrc = `media/${this.data.id}/${posterName}`;
+
     const img = document.createElement('img');
     img.setAttribute('data-src', this.data.poster);
+    img.onerror = () => { img.src = fallbackSrc; img.onerror = null; };
     img.classList.add('lazyload');
     img.alt = `Item image for the ${this.data.title}`;
     img.src = 'img/puff.svg';
@@ -69,8 +73,9 @@ export class ItemRenderer {
     const discount = document.createElement('p');
     discount.classList.add('item__discount');
 
-    if (!this.data.buyable && this.data.defaultPrice) {
-      this.priceElement.textContent = `€${this.data.defaultPrice.toFixed(2)}`;
+    if (!this.data.buyable && (this.data.defaultPrice || this.data.oldPrice)) {
+      const price = this.data.defaultPrice || this.data.oldPrice;
+      this.priceElement.textContent = `€${price.toFixed(2)}`;
       this.priceElement.classList.add('normal');
       discount.textContent = 'Last known price';
       discount.classList.add('normal');

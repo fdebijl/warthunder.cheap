@@ -37,6 +37,7 @@ const main = async () => {
 
     if (!matchingItem) {
       item.firstAvailableAt = new Date();
+      // TODO: Store media
     }
 
     if (matchingItem && !matchingItem.firstAvailableAt) {

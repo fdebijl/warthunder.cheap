@@ -42,7 +42,7 @@ export class DetailsRenderer extends EventTarget {
     const slidesContainer = document.createElement('div');
     slidesContainer.classList.add('carousel__slides');
 
-    data.details.media.forEach((media) => {
+    data?.details?.media.forEach((media) => {
       const mediaParts = media.split(';');
       const isVideo = mediaParts[0].endsWith('.webm') || mediaParts[0].endsWith('.mp4');
 
@@ -122,7 +122,7 @@ export class DetailsRenderer extends EventTarget {
       const price = document.createElement('p');
       price.classList.add('details__price');
 
-      let priceValue = data.defaultPrice ?? data.oldPrice;  
+      let priceValue = data.defaultPrice ?? data.oldPrice;
 
       if (this.referalRenderer && data.category !== 'GoldenEagles') {
         priceValue *= this.referalRenderer.discountFactor;
@@ -136,7 +136,7 @@ export class DetailsRenderer extends EventTarget {
 
     const discount = document.createElement('p');
     discount.classList.add('details__discount', 'muted');
-    discount.textContent = data.isDiscounted
+    discount.textContent = data.isDiscounted && data.buyable
       ? `${data.discountPercent || 0}% discount over normal price`
       : 'Normal pricing for this item';
     infoLeft.appendChild(discount);
@@ -259,17 +259,20 @@ export class DetailsRenderer extends EventTarget {
     const descriptionHeader = document.createElement('p');
     descriptionHeader.classList.add('details__description-header');
     descriptionHeader.textContent = 'This pack includes';
-    infoRight.appendChild(descriptionHeader);
 
     const descriptionShort = document.createElement('p');
     descriptionShort.classList.add('details__description-short');
 
-    if (data.description.indexOf(';') > -1) {
-      data.description = data.description.split(';').join('\n');
-    }
 
-    descriptionShort.textContent = data.description;
-    infoRight.appendChild(descriptionShort);
+    if (data.description) {
+      if (data.description?.indexOf(';') > -1) {
+        data.description = data.description.split(';').join('\n');
+      }
+
+      infoRight.appendChild(descriptionHeader);
+      descriptionShort.textContent = data.description;
+      infoRight.appendChild(descriptionShort);
+    }
 
     const scrapeInfo = document.createElement('p');
     scrapeInfo.classList.add('details__scrape-info', 'muted', 'margin-top-sm');
@@ -290,7 +293,7 @@ export class DetailsRenderer extends EventTarget {
 
     const descriptionLong = document.createElement('div');
     descriptionLong.classList.add('details__description-long');
-    descriptionLong.textContent = data.details.description;
+    descriptionLong.textContent = data.details?.description;
     descriptionLongWrapper.appendChild(descriptionLong);
 
     detailWrapper.appendChild(descriptionLongWrapper);

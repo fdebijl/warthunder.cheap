@@ -76,3 +76,5 @@ export const SHOP_2016_SELECTORS: SelectorSet = {
   PAGE__DESCRIPTION: '.inner__description-block .item-col-left',
   PAGE__SHORT_DESCRIPTION: '.inner__description li'
 } satisfies SelectorSet;
+
+export const MEDIA_PATH = process.env.MEDIA_PATH || './media';

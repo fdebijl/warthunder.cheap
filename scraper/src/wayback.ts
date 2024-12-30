@@ -7,38 +7,10 @@ import { deepCheckItem, findNon404Memento, getCurrentItems, isItemBuyable, match
 import { clog } from './index.js';
 import { getArchiveSnapshots } from './scrapers/getArchiveSnapshots.js';
 import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants.js';
+import { containsNonLatinCharacters, validateMediaSources } from './util/index.js';
+import { storeMedia } from './util/storeMedia.js';
 
 const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
-
-const containsNonLatinCharacters = (input: string): boolean => {
-  // eslint-disable-next-line no-control-regex
-  const nonLatinRegex = /[^\u0000-\u007F\u0100-\u024F\s.,;:'"\-()[\]{}!?0-9/]/;
-
-  return nonLatinRegex.test(input);
-}
-
-const validateMediaSources = async (media: string[]): Promise<string[]> => {
-  const validatedMedia = [];
-
-  for (const source of media) {
-    let fixedSource = source;
-    if (source.startsWith('/')) {
-      fixedSource = `https://static-store.gaijin.net${source}`;
-    }
-    try {
-      const response = await fetch(fixedSource, { method: 'HEAD' });
-      if (response.ok) {
-        validatedMedia.push(fixedSource);
-      } else {
-        clog.log(`Source ${fixedSource} returned ${response.status}, removing`, LOGLEVEL.DEBUG);
-      }
-    } catch (e) {
-      clog.log(`Error fetching source ${fixedSource}: ${e}`, LOGLEVEL.ERROR);
-    }
-  }
-
-  return validatedMedia;
-};
 
 const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> => {
   const liveLink = `${item.href}`;
@@ -98,47 +70,27 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
       return null;
     }
 
-    if (deepCheckedItem.details?.media) {
-      const validatedMedia = await validateMediaSources(deepCheckedItem.details.media);
-      deepCheckedItem.details.media = validatedMedia;
-    }
+    // TODO: Remove, no longer necessary now that we store images locally
+    // if (deepCheckedItem.details?.media) {
+    //   const validatedMedia = await validateMediaSources(deepCheckedItem.details.media);
+    //   deepCheckedItem.details.media = validatedMedia;
+    // }
 
-    if (deepCheckedItem.poster) {
-      const validatedPoster = await validateMediaSources([deepCheckedItem.poster]);
+    // if (deepCheckedItem.poster) {
+    //   const validatedPoster = await validateMediaSources([deepCheckedItem.poster]);
 
-      if (validatedPoster.length > 0) {
-        deepCheckedItem.poster = validatedPoster[0];
-      } else {
-        deepCheckedItem.poster = deepCheckedItem.details?.media?.find((source) => source.endsWith('.jpg') || source.endsWith('.png'));
-      }
-    }
-
-    // Backdate first available date if necessary
-    const existingItem = await findItem(deepCheckedItem.id);
-    if (existingItem?.firstAvailableAt) {
-      if (existingItem.firstAvailableAt.getTime() < safeUrl.datetime.getTime()) {
-        deepCheckedItem.firstAvailableAt = safeUrl.datetime;
-      }
-    } else {
-      deepCheckedItem.firstAvailableAt = safeUrl.datetime;
-    }
+    //   if (validatedPoster.length > 0) {
+    //     deepCheckedItem.poster = validatedPoster[0];
+    //   } else {
+    //     deepCheckedItem.poster = deepCheckedItem.details?.media?.find((source) => source.endsWith('.jpg') || source.endsWith('.png'));
+    //   }
+    // }
 
     clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
     await upsertItem(deepCheckedItem);
 
-    const price: Price = {
-      itemId: item.id,
-      date: safeUrl.datetime,
-      defaultPrice: item.defaultPrice,
-      oldPrice: item.oldPrice,
-      newPrice: item.newPrice,
-      isDiscounted: item.isDiscounted,
-      discountPercent: item.discountPercent,
-    };
-
-    await insertPrice(price);
-
-    // TODO: Store poster and media in a NFS volume so the website can display it
+    const prefix = safeUrl.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0];
+    await storeMedia(item, prefix);
 
     return deepCheckedItem;
   } catch (e) {
@@ -155,6 +107,42 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
   const page = await browser.pages().then((pages) => pages[0]);
   page.setDefaultNavigationTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
   page.setDefaultTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
+
+  for (const item of items) {
+    // Assume unbuyable since we're scraping the archive, normal scraping run will rectify this if false
+    item.buyable = false;
+
+    // Backdate first available date if necessary
+    const existingItem = await findItem(item.id);
+    if (existingItem?.firstAvailableAt) {
+      if (existingItem.firstAvailableAt.getTime() < root.datetime.getTime()) {
+        item.firstAvailableAt = root.datetime;
+      }
+    } else {
+      item.firstAvailableAt = root.datetime;
+    }
+
+    // We already upsert here so that the item is in the DB, even if there are no memento's for the details page
+    await upsertItem(item);
+
+    const archivePrefix = root.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0] as string;
+    if (archivePrefix) {
+      const prefix = archivePrefix + 'im_/';
+      await storeMedia(item, prefix);
+    }
+
+    const price: Price = {
+      itemId: item.id,
+      date: root.datetime,
+      defaultPrice: item.defaultPrice,
+      oldPrice: item.oldPrice,
+      newPrice: item.newPrice,
+      isDiscounted: item.isDiscounted,
+      discountPercent: item.discountPercent,
+    };
+
+    await insertPrice(price);
+  }
 
   const unseenItems = items.filter((item) => !seenItems.some((seenItem) => seenItem.id === item.id));
   const usableItems = [];
