@@ -35,6 +35,14 @@ const main = async () => {
       await triggerAlertsForAvailable(item, matchingItem);
     }
 
+    if (!matchingItem) {
+      item.firstAvailableAt = new Date();
+    }
+
+    if (matchingItem && !matchingItem.firstAvailableAt) {
+      item.firstAvailableAt = matchingItem.createdAt;
+    }
+
     item.source = 'live';
     await upsertItem(item);
 

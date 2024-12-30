@@ -9,8 +9,9 @@ import {
   getPricesForItem,
   insertAlert,
   alertExists,
-  findAlerts,
-  deleteAlert
+  queryAlerts,
+  deleteAlert,
+  findAlert
 } from 'wtcheap.shared';
 
 import { API_VERSION, PATH_PREFIX, PORT, JWT_SECRET } from './constants.js';
@@ -100,7 +101,7 @@ app.get(`/${PATH_PREFIX}/${API_VERSION}/alerts`, async (req, res) => {
     return;
   }
 
-  const alerts = await findAlerts({ recipient: user.sub as string });
+  const alerts = await queryAlerts({ recipient: user.sub as string });
   res.json(alerts);
 });
 
@@ -113,9 +114,9 @@ app.delete(`/${PATH_PREFIX}/${API_VERSION}/alerts/:alertId`, async (req, res) =>
   }
 
   const alertId = req.params.alertId;
-  const alert = await findAlerts({ recipient: user.sub as string, _id: new ObjectId(alertId) });
+  const alert = await findAlert(new ObjectId(alertId));
 
-  if (!alert) {
+  if (!alert || alert.recipient !== user.sub) {
     res.status(404).send(JSON.stringify({ message: 'Alert not found or unauthorized' }));
     return;
   }

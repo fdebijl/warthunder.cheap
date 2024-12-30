@@ -11,7 +11,10 @@ import { matchSelectors } from './matchSelectors.js';
 // TODO: Extend documentation for parameters
 // TODO: Get rid of slowMode in favor of waitForSelectors
 /** Use slowmode when on slow connections or when scraping the internet archive */
-export const getCurrentItems = async ({ targetRoots, slowMode = false, ignoreDiscounts = false, skipDeepCheck = false }: { targetRoots: string[], slowMode?: boolean, ignoreDiscounts?: boolean, skipDeepCheck?: boolean}): Promise<Item[]> => {
+export const getCurrentItems = async (
+  { targetRoots, slowMode = false, ignoreDiscounts = false, skipDeepCheck = false }:
+  { targetRoots: string[], slowMode?: boolean, ignoreDiscounts?: boolean, skipDeepCheck?: boolean}
+): Promise<Item[]> => {
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
   const page = await browser.newPage();
 

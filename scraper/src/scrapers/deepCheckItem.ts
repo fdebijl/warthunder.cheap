@@ -8,7 +8,10 @@ import { clog } from '../index.js';
 import { isItemBuyable } from './isItemBuyable.js';
 import { getDetailsOnPage } from './getDetailsOnPage.js';
 
-export const deepCheckItem = async ({ item, selectors, page, skip404Check = false, skipPriceAssignment = false }: { item: Item, selectors: SelectorSet, page?: Page, skip404Check?: boolean, skipPriceAssignment?: boolean }): Promise<Item> => {
+export const deepCheckItem = async (
+  { item, selectors, page, skip404Check = false, skipPriceAssignment = false, skipNav = false }:
+  { item: Item, selectors: SelectorSet, page?: Page, skip404Check?: boolean, skipPriceAssignment?: boolean, skipNav?: boolean }
+): Promise<Item> => {
   item = { ...item };
 
   if (!skip404Check) {
@@ -26,8 +29,9 @@ export const deepCheckItem = async ({ item, selectors, page, skip404Check = fals
     page = await browser.newPage();
   }
 
-  // TODO: During wayback runs the page will already be on the right url, so we can skip this step
-  await page.goto(item.href, { waitUntil: 'networkidle2' });
+  if (!skipNav) {
+    await page.goto(item.href, { waitUntil: 'networkidle2' });
+  }
 
   await Promise.race([
     milliseconds(30_000 - 10).then(() => { throw new Error('Could not find description during wait before getDetailsOnPage') }),

@@ -1,6 +1,6 @@
 import puppeteer, { Page } from 'puppeteer';
 import { LOGLEVEL } from '@fdebijl/clog';
-import { Item, upsertItem } from 'wtcheap.shared';
+import { findItem, insertPrice, Item, Price, upsertItem } from 'wtcheap.shared';
 import { franc } from 'franc';
 
 import { deepCheckItem, findNon404Memento, getCurrentItems, isItemBuyable, matchSelectors } from './scrapers/index.js';
@@ -67,13 +67,13 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
 
     switch (selectors) {
       case SHOP_2022_SELECTORS: {
-        clog.log('Using 2022 selectors for detail page under scrape');
+        clog.log('Using 2022 selectors for detail page under scrape', LOGLEVEL.DEBUG);
         break;
       } case SHOP_2021_SELECTORS: {
-        clog.log('Using 2021 selectors for detail page under scrape');
+        clog.log('Using 2021 selectors for detail page under scrape', LOGLEVEL.DEBUG);
         break;
       } case SHOP_2016_SELECTORS: {
-        clog.log('Using 2016 selectors for detail page under scrape');
+        clog.log('Using 2016 selectors for detail page under scrape', LOGLEVEL.DEBUG);
         break;
       }
     }
@@ -83,7 +83,7 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
       return null;
     }
 
-    const deepCheckedItem = await deepCheckItem({ item, selectors, page, skip404Check: true, skipPriceAssignment: true });
+    const deepCheckedItem = await deepCheckItem({ item, selectors, page, skip404Check: true, skipPriceAssignment: true, skipNav: true });
     deepCheckedItem.buyable = await isItemBuyable(liveLink);
     deepCheckedItem.href = liveLink;
 
@@ -113,11 +113,31 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
       }
     }
 
+    // Backdate first available date if necessary
+    const existingItem = await findItem(deepCheckedItem.id);
+    if (existingItem?.firstAvailableAt) {
+      if (existingItem.firstAvailableAt.getTime() < safeUrl.datetime.getTime()) {
+        deepCheckedItem.firstAvailableAt = safeUrl.datetime;
+      }
+    } else {
+      deepCheckedItem.firstAvailableAt = safeUrl.datetime;
+    }
+
     clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
     await upsertItem(deepCheckedItem);
 
-    // TODO: Insert price
-    // TODO: Backdate createdAt, make sure this only happens once for every item
+    const price: Price = {
+      itemId: item.id,
+      date: safeUrl.datetime,
+      defaultPrice: item.defaultPrice,
+      oldPrice: item.oldPrice,
+      newPrice: item.newPrice,
+      isDiscounted: item.isDiscounted,
+      discountPercent: item.discountPercent,
+    };
+
+    await insertPrice(price);
+
     // TODO: Store poster and media in a NFS volume so the website can display it
 
     return deepCheckedItem;
@@ -130,7 +150,7 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
 const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item[]): Promise<Item[]> => {
   clog.log(`Scraping root ${root.url} (${root.datetime.toISOString()})`, LOGLEVEL.DEBUG);
 
-  const items = await getCurrentItems({ targetRoots: [root.url], slowMode: true, ignoreDiscounts: true, skipDeepCheck: true });
+  const items = await getCurrentItems({ targetRoots: [root.url], slowMode: true, ignoreDiscounts: false, skipDeepCheck: true });
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
   const page = await browser.pages().then((pages) => pages[0]);
   page.setDefaultNavigationTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);

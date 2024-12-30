@@ -3,6 +3,7 @@ import { SelectorSet } from 'wtcheap.shared';
 
 import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from '../constants.js';
 import { clog } from '../index.js';
+import { LOGLEVEL } from '@fdebijl/clog';
 
 type DetailsInfo = {
   oldPrice: number;
@@ -16,13 +17,13 @@ type DetailsInfo = {
 export const getDetailsOnPage = async ({ page, selectors }: { page: Page, selectors: SelectorSet }): Promise<DetailsInfo> => {
   switch (selectors) {
     case SHOP_2022_SELECTORS: {
-      clog.log('Using 2022 selectors for detail page under scrape');
+      clog.log('Using 2022 selectors for detail page under scrape', LOGLEVEL.DEBUG);
       return getDetailsOnPage2022(page, selectors);
     } case SHOP_2021_SELECTORS: {
-      clog.log('Using 2021 selectors for detail page under scrape');
+      clog.log('Using 2021 selectors for detail page under scrape', LOGLEVEL.DEBUG);
       return getDetailsOnPage2021(page, selectors);
     } case SHOP_2016_SELECTORS: {
-      clog.log('Using 2016 selectors for detail page under scrape');
+      clog.log('Using 2016 selectors for detail page under scrape', LOGLEVEL.DEBUG);
       return getDetailsOnPage2016(page, selectors);
     } default: {
       throw new Error(`Unknown selectors: ${selectors}`);
