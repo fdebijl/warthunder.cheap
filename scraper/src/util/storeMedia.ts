@@ -15,7 +15,7 @@ export const storeMedia = async (item: Item, prefix?: string): Promise<void> => 
     const preflight = await fetch(`${prefix}${item.poster}`, { method: 'HEAD' });
     const contentType = preflight.headers.get('content-type');
 
-    if (!contentType?.includes('image')) {
+    if (!contentType?.includes('image') && !contentType?.includes('video')) {
       return;
     }
 
@@ -34,8 +34,8 @@ export const storeMedia = async (item: Item, prefix?: string): Promise<void> => 
       const preflight = await fetch(`${prefix}${item.poster}`, { method: 'HEAD' });
       const contentType = preflight.headers.get('content-type');
 
-      if (!contentType?.includes('image')) {
-        continue;
+      if (!contentType?.includes('image') && !contentType?.includes('video')) {
+        return;
       }
 
       const name = media.split('/').pop();

@@ -69,22 +69,6 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
       return null;
     }
 
-    // TODO: Remove, no longer necessary now that we store images locally
-    // if (deepCheckedItem.details?.media) {
-    //   const validatedMedia = await validateMediaSources(deepCheckedItem.details.media);
-    //   deepCheckedItem.details.media = validatedMedia;
-    // }
-
-    // if (deepCheckedItem.poster) {
-    //   const validatedPoster = await validateMediaSources([deepCheckedItem.poster]);
-
-    //   if (validatedPoster.length > 0) {
-    //     deepCheckedItem.poster = validatedPoster[0];
-    //   } else {
-    //     deepCheckedItem.poster = deepCheckedItem.details?.media?.find((source) => source.endsWith('.jpg') || source.endsWith('.png'));
-    //   }
-    // }
-
     clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
     await upsertItem(deepCheckedItem);
 
@@ -171,7 +155,7 @@ export const waybackMain = async () => {
   clog.log(`Starting Wayback Machine scraping run at ${new Date().toISOString()}`);
 
   const memento = await getArchiveSnapshots('https://store.gaijin.net/catalog.php?category=WarThunderPacks');
-  const roots = memento.memento.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
+  const roots = memento.memento.sort((a, b) => a.datetime.getTime() - b.datetime.getTime()).slice(-20);
 
   clog.log(`Found ${roots.length} mementos`);
 
