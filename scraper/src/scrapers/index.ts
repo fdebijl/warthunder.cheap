@@ -4,4 +4,4 @@ export * from './isItemBuyable.js';
 export * from './matchSelectors.js';
 export * from './getDetailsOnPage.js';
 export * from './getItemsOnPage.js';
-export * from './findNon404Memento.js';
+export * from './findBestMemento.js';

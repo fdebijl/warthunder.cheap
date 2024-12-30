@@ -3,7 +3,7 @@ import { LOGLEVEL } from '@fdebijl/clog';
 import { findItem, insertPrice, Item, Price, upsertItem } from 'wtcheap.shared';
 import { franc } from 'franc';
 
-import { deepCheckItem, findNon404Memento, getCurrentItems, isItemBuyable, matchSelectors } from './scrapers/index.js';
+import { deepCheckItem, findBestMemento, getCurrentItems, isItemBuyable, matchSelectors } from './scrapers/index.js';
 import { clog } from './index.js';
 import { getArchiveSnapshots } from './scrapers/getArchiveSnapshots.js';
 import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants.js';
@@ -13,7 +13,7 @@ const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
 
 const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> => {
   const liveLink = `${item.href}`;
-  const safeUrl = await findNon404Memento(item.href, page.browser());
+  const safeUrl = await findBestMemento(item.href, page.browser());
 
   if (!safeUrl) {
     clog.log(`Item ${item.id} "${item.title}" is a 404 on every snapshot, skipping`, LOGLEVEL.DEBUG);

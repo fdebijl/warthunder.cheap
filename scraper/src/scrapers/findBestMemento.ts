@@ -4,7 +4,7 @@ import { LOGLEVEL } from '@fdebijl/clog';
 import { getArchiveSnapshots } from './getArchiveSnapshots.js';
 import { clog } from '../index.js';
 
-export const findNon404Memento = async (url: string, browser: Browser): Promise<{ url: string; datetime: Date; } | null> => {
+export const findBestMemento = async (url: string, browser: Browser): Promise<{ url: string; datetime: Date; } | null> => {
   const mementos = await getArchiveSnapshots(url);
 
   if (mementos['memento'] === undefined) {
