@@ -3,7 +3,7 @@ import { Item, SelectorSet } from 'wtcheap.shared';
 import { LOGLEVEL } from '@fdebijl/clog';
 import { milliseconds } from '@fdebijl/pog';
 
-import { PERMA_SALE_ITEM_IDS } from '../constants.js';
+import { LAUNCH_HEADLESS, PERMA_SALE_ITEM_IDS } from '../constants.js';
 import { clog } from '../index.js';
 import { isItemBuyable } from './isItemBuyable.js';
 import { getDetailsOnPage } from './getDetailsOnPage.js';
@@ -25,7 +25,7 @@ export const deepCheckItem = async (
   }
 
   if (!page) {
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+    const browser = await puppeteer.launch({ headless: LAUNCH_HEADLESS, args: ['--no-sandbox'] });
     page = await browser.newPage();
   }
 

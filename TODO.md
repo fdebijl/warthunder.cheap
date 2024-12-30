@@ -4,7 +4,7 @@ Todo:
   - Filtering
     - Nation
     - Rank
-    - Type (we don't collect this rn)
+    - Type (i.e. plane, vehicle, helicopter, or vessel, we don't collect this rn)
   - Sorting
     - Price
     - Date
@@ -22,3 +22,4 @@ Todo:
   - Improve timings/reduce timeout duration for wayback scrapes
   - Save all-404/no-memento items and skip those
   - Bundles always have undetermined description language, even if it's actually English
+  - Address archive.org rate limiting

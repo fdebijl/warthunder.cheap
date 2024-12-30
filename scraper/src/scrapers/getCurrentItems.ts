@@ -7,6 +7,7 @@ import { clog } from '../index.js';
 import { deepCheckItem } from './deepCheckItem.js';
 import { getItemsOnPage } from './getItemsOnPage.js';
 import { matchSelectors } from './matchSelectors.js';
+import { LAUNCH_HEADLESS } from '../constants.js';
 
 // TODO: Extend documentation for parameters
 // TODO: Get rid of slowMode in favor of waitForSelectors
@@ -15,7 +16,7 @@ export const getCurrentItems = async (
   { targetRoots, slowMode = false, ignoreDiscounts = false, skipDeepCheck = false }:
   { targetRoots: string[], slowMode?: boolean, ignoreDiscounts?: boolean, skipDeepCheck?: boolean}
 ): Promise<Item[]> => {
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+  const browser = await puppeteer.launch({ headless: LAUNCH_HEADLESS, args: ['--no-sandbox'] });
   const page = await browser.newPage();
 
   const items: Item[] = [];

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import puppeteer, { Page } from 'puppeteer';
 import { LOGLEVEL } from '@fdebijl/clog';
 import { findItem, insertPrice, Item, Price, upsertItem } from 'wtcheap.shared';
@@ -6,8 +7,9 @@ import { franc } from 'franc';
 import { deepCheckItem, findBestMemento, getCurrentItems, isItemBuyable, matchSelectors } from './scrapers/index.js';
 import { clog } from './index.js';
 import { getArchiveSnapshots } from './scrapers/getArchiveSnapshots.js';
-import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants.js';
-import { containsNonLatinCharacters, storeMedia } from './util/index.js';
+import { LAUNCH_HEADLESS, SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants.js';
+import { containsNonLatinCharacters, enqueueStoreMedia } from './util/index.js';
+import { milliseconds } from '@fdebijl/pog';
 
 const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
 
@@ -72,8 +74,11 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
     clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
     await upsertItem(deepCheckedItem);
 
-    const prefix = safeUrl.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0];
-    await storeMedia(item, prefix).catch(e => clog.log(`Error storing media for item ${item.id} "${item.title}": ${e}`, LOGLEVEL.WARN));
+    const archivePrefix = safeUrl.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0] as string;
+    if (archivePrefix) {
+      const prefix = archivePrefix + 'im_/';
+      enqueueStoreMedia(item, prefix).catch(e => clog.log(`Error storing media for item ${item.id} "${item.title}": ${e}`, LOGLEVEL.WARN));
+    }
 
     return deepCheckedItem;
   } catch (e) {
@@ -86,7 +91,7 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
   clog.log(`Scraping root ${root.url} (${root.datetime.toISOString()})`, LOGLEVEL.DEBUG);
 
   const items = await getCurrentItems({ targetRoots: [root.url], slowMode: true, ignoreDiscounts: false, skipDeepCheck: true });
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+  const browser = await puppeteer.launch({ headless: LAUNCH_HEADLESS, args: ['--no-sandbox'] });
   const page = await browser.pages().then((pages) => pages[0]);
   page.setDefaultNavigationTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
   page.setDefaultTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
@@ -112,7 +117,7 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
     const archivePrefix = root.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0] as string;
     if (archivePrefix) {
       const prefix = archivePrefix + 'im_/';
-      await storeMedia(item, prefix).catch(e => clog.log(`Error storing media for item ${item.id} "${item.title}": ${e}`, LOGLEVEL.WARN));
+      enqueueStoreMedia(item, prefix).catch(e => clog.log(`Error storing media for item ${item.id} "${item.title}": ${e}`, LOGLEVEL.WARN));
     }
 
     const price: Price = {
@@ -155,7 +160,7 @@ export const waybackMain = async () => {
   clog.log(`Starting Wayback Machine scraping run at ${new Date().toISOString()}`);
 
   const memento = await getArchiveSnapshots('https://store.gaijin.net/catalog.php?category=WarThunderPacks');
-  const roots = memento.memento.sort((a, b) => a.datetime.getTime() - b.datetime.getTime()).slice(-20);
+  const roots = memento.memento.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
 
   clog.log(`Found ${roots.length} mementos`);
 
