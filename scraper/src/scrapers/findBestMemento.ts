@@ -43,7 +43,7 @@ export const findBestMemento = async (url: string, browser: Browser): Promise<{ 
     })
   );
 
-  clog.log(`Found ${results.filter((result) => result !== null).length} non-404 mementos out of ${mementos['memento'].length} total mementos for ${url}`, LOGLEVEL.DEBUG);
+  clog.log(`Found ${results.filter((result) => result !== null).length} usable mementos out of ${mementos['memento'].length} total mementos for ${url}`, LOGLEVEL.DEBUG);
 
   return results.find((result) => result !== null) || null;
 };

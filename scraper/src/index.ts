@@ -9,6 +9,9 @@ import { ensureIndices } from './db/ensureIndices.js';
 
 export const clog = new Clog(LOGLEVEL.DEBUG);
 
+const isWaybackRun = process.argv.includes('--wayback');
+const isPricingRun = process.argv.includes('--pricing');
+
 const main = async () => {
   await ensureIndices();
 
@@ -47,17 +50,19 @@ const main = async () => {
     item.source = 'live';
     await upsertItem(item);
 
-    const price: Price = {
-      itemId: item.id,
-      date: new Date(),
-      defaultPrice: item.defaultPrice,
-      newPrice: item.newPrice,
-      oldPrice: item.oldPrice,
-      isDiscounted: item.isDiscounted,
-      discountPercent: item.discountPercent
-    };
+    if (isPricingRun) {
+      const price: Price = {
+        itemId: item.id,
+        date: new Date(),
+        defaultPrice: item.defaultPrice,
+        newPrice: item.newPrice,
+        oldPrice: item.oldPrice,
+        isDiscounted: item.isDiscounted,
+        discountPercent: item.discountPercent
+      };
 
-    await insertPrice(price);
+      await insertPrice(price);
+    }
   }
 
   for (const knownItem of notCurrentKnownItems) {
