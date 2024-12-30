@@ -12,20 +12,40 @@ export const storeMedia = async (item: Item, prefix?: string): Promise<void> => 
   fs.mkdirSync(path, { recursive: true });
 
   if (item.poster) {
+    const preflight = await fetch(`${prefix}${item.poster}`, { method: 'HEAD' });
+    const contentType = preflight.headers.get('content-type');
+
+    if (!contentType?.includes('image')) {
+      return;
+    }
+
     const name = item.poster.split('/').pop();
 
     const { body } = await fetch(`${prefix}${item.poster}`);
-    const stream = fs.createWriteStream(`${path}/${name}`);
-    await finished(Readable.fromWeb(body as ReadableStream).pipe(stream));
+
+    if (body) {
+      const stream = fs.createWriteStream(`${path}/${name}`);
+      await finished(Readable.fromWeb(body as ReadableStream).pipe(stream));
+    }
   }
 
   if (item.details?.media?.length) {
     for (const media of item.details.media) {
+      const preflight = await fetch(`${prefix}${item.poster}`, { method: 'HEAD' });
+      const contentType = preflight.headers.get('content-type');
+
+      if (!contentType?.includes('image')) {
+        continue;
+      }
+
       const name = media.split('/').pop();
 
       const { body } = await fetch(`${prefix}${media}`);
-      const stream = fs.createWriteStream(`${path}/${name}`);
-      await finished(Readable.fromWeb(body as ReadableStream).pipe(stream));
+
+      if (body) {
+        const stream = fs.createWriteStream(`${path}/${name}`);
+        await finished(Readable.fromWeb(body as ReadableStream).pipe(stream));
+      }
     }
   }
 }

@@ -7,8 +7,7 @@ import { deepCheckItem, findNon404Memento, getCurrentItems, isItemBuyable, match
 import { clog } from './index.js';
 import { getArchiveSnapshots } from './scrapers/getArchiveSnapshots.js';
 import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants.js';
-import { containsNonLatinCharacters, validateMediaSources } from './util/index.js';
-import { storeMedia } from './util/storeMedia.js';
+import { containsNonLatinCharacters, storeMedia } from './util/index.js';
 
 const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
 
@@ -90,7 +89,7 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
     await upsertItem(deepCheckedItem);
 
     const prefix = safeUrl.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0];
-    await storeMedia(item, prefix);
+    await storeMedia(item, prefix).catch(e => clog.log(`Error storing media for item ${item.id} "${item.title}": ${e}`, LOGLEVEL.WARN));
 
     return deepCheckedItem;
   } catch (e) {
@@ -111,6 +110,7 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
   for (const item of items) {
     // Assume unbuyable since we're scraping the archive, normal scraping run will rectify this if false
     item.buyable = false;
+    item.source = 'archive';
 
     // Backdate first available date if necessary
     const existingItem = await findItem(item.id);
@@ -128,7 +128,7 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
     const archivePrefix = root.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0] as string;
     if (archivePrefix) {
       const prefix = archivePrefix + 'im_/';
-      await storeMedia(item, prefix);
+      await storeMedia(item, prefix).catch(e => clog.log(`Error storing media for item ${item.id} "${item.title}": ${e}`, LOGLEVEL.WARN));
     }
 
     const price: Price = {
