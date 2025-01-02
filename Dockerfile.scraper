@@ -16,7 +16,8 @@ RUN apt-get update && apt-get install -y \
     libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 lsb-release wget xdg-utils
 WORKDIR /usr/src/app/scraper
 COPY scraper/package.json ./
-COPY package-lock.json ./
+COPY package-lock.json /usr/src/app
+COPY package.json /usr/src/app
 COPY --from=builder /usr/src/app/scraper/dist ./
 COPY --from=base /usr/src/app/node_modules /usr/src/app/node_modules
 COPY --from=base /usr/src/app/shared /usr/src/app/shared
