@@ -43,7 +43,7 @@ export const enqueueStoreMedia = async (item: Item, prefix?: string): Promise<vo
   return;
 }
 
-const storeMedia = async (item: Item, prefix?: string): Promise<void> => {
+export const storeMedia = async (item: Item, prefix?: string): Promise<void> => {
   const path = `${MEDIA_PATH}/${item.id}`
 
   fs.mkdirSync(path, { recursive: true });
