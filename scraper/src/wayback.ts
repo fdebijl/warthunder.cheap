@@ -1,4 +1,3 @@
-import fs from 'fs';
 import puppeteer, { Page } from 'puppeteer';
 import { LOGLEVEL } from '@fdebijl/clog';
 import { findItem, insertPrice, Item, Price, upsertItem } from 'wtcheap.shared';
@@ -9,7 +8,6 @@ import { clog } from './index.js';
 import { getArchiveSnapshots } from './scrapers/getArchiveSnapshots.js';
 import { LAUNCH_HEADLESS, SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants.js';
 import { containsNonLatinCharacters, enqueueStoreMedia } from './util/index.js';
-import { milliseconds } from '@fdebijl/pog';
 
 const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
 
