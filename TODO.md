@@ -16,6 +16,7 @@ Todo:
 - Devops/other
   - Add readmes
   - Add other markdown files such as security/contributing for github purposes
+  - Add heartbeat to uptimerobot
 - Scraper
   - Split into two run types: hourly non-pricing runs and daily pricing runs: non-pricing runs do everything but enter a new Price, pricing runs do everything
   - Save scraped image locally (to an NFS share, for example) instead of hotlinking Gaijin's versions, in case they get deleted
