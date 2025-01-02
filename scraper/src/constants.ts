@@ -79,3 +79,4 @@ export const SHOP_2016_SELECTORS: SelectorSet = {
 
 export const MEDIA_PATH = process.env.MEDIA_PATH || './media';
 export const LAUNCH_HEADLESS = process.env.LAUNCH_HEADLESS ? process.env.LAUNCH_HEADLESS === 'true' : true;
+export const HEARTBEAT_URL = process.env.HEARTBEAT_URL;

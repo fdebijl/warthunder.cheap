@@ -24,6 +24,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get(`/${PATH_PREFIX}/${API_VERSION}/status`, async (req, res) => {
+  res.status(200).send(JSON.stringify({ status: 'OK' }));
+});
+
 app.get(`/${PATH_PREFIX}/${API_VERSION}/items/current`, async (req, res) => {
   const items = await listCurrentItems();
   res.json(items);

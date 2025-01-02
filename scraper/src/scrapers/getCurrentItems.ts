@@ -101,6 +101,7 @@ export const getCurrentItems = async (
     return items;
   }
 
+  // TODO: Add try/catch here
   for await (const item of items) {
     clog.log(`Deep checking ${item.title}`, LOGLEVEL.DEBUG);
 
