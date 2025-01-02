@@ -3,7 +3,7 @@ import { Price, listItems, insertPrice, upsertItem, } from 'wtcheap.shared';
 
 import { getCurrentItems, deepCheckItem } from './scrapers/index.js';
 import { availableAlertNeeded, discountAlertNeeded, triggerAlertsForAvailable, triggerAlertsForDiscount, triggerAlertsForItems } from './alerting/index.js';
-import { SHOP_2022_SELECTORS, TARGET_ROOTS } from './constants.js';
+import { HEARTBEAT_URL, SHOP_2022_SELECTORS, TARGET_ROOTS } from './constants.js';
 import { waybackMain } from './wayback.js';
 import { ensureIndices } from './db/ensureIndices.js';
 import { storeMedia } from './util/storeMedia.js';
@@ -82,6 +82,11 @@ const main = async () => {
   }
 
   clog.log(`Finished scraping run at ${new Date().toISOString()}`);
+
+  if (HEARTBEAT_URL) {
+    await fetch(HEARTBEAT_URL);
+  }
+
   process.exit(0);
 };
 

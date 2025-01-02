@@ -10,6 +10,7 @@ import { LAUNCH_HEADLESS, SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SE
 import { containsNonLatinCharacters, enqueueStoreMedia } from './util/index.js';
 
 const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
+const isImagingRun = process.argv.includes('--imaging');
 
 const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> => {
   const liveLink = `${item.href}`;
@@ -72,10 +73,12 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
     clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
     await upsertItem(deepCheckedItem);
 
-    const archivePrefix = safeUrl.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0] as string;
-    if (archivePrefix) {
-      const prefix = archivePrefix + 'im_/';
-      enqueueStoreMedia(item, prefix).catch(e => clog.log(`Error storing media for item ${item.id} "${item.title}": ${e}`, LOGLEVEL.WARN));
+    if (isImagingRun) {
+      const archivePrefix = safeUrl.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0] as string;
+      if (archivePrefix) {
+        const prefix = archivePrefix + 'im_/';
+        enqueueStoreMedia(item, prefix).catch(e => clog.log(`Error storing media for item ${item.id} "${item.title}": ${e}`, LOGLEVEL.WARN));
+      }
     }
 
     return deepCheckedItem;
@@ -112,10 +115,12 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
     // We already upsert here so that the item is in the DB, even if there are no memento's for the details page
     await upsertItem(item);
 
-    const archivePrefix = root.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0] as string;
-    if (archivePrefix) {
-      const prefix = archivePrefix + 'im_/';
-      enqueueStoreMedia(item, prefix).catch(e => clog.log(`Error storing media for item ${item.id} "${item.title}": ${e}`, LOGLEVEL.WARN));
+    if (isImagingRun) {
+      const archivePrefix = root.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0] as string;
+      if (archivePrefix) {
+        const prefix = archivePrefix + 'im_/';
+        enqueueStoreMedia(item, prefix).catch(e => clog.log(`Error storing media for item ${item.id} "${item.title}": ${e}`, LOGLEVEL.WARN));
+      }
     }
 
     const price: Price = {

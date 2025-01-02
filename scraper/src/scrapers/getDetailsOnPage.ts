@@ -14,6 +14,7 @@ type DetailsInfo = {
   shortDescription?: string;
 }
 
+// TODO: Only log selector set when we're on a wayback scraping run
 export const getDetailsOnPage = async ({ page, selectors }: { page: Page, selectors: SelectorSet }): Promise<DetailsInfo> => {
   switch (selectors) {
     case SHOP_2022_SELECTORS: {
