@@ -36,3 +36,30 @@ jobs:
         run: npm install --workspace=api
       - name: Compile
         run: npm run compile --workspace=shared --workspace=api
+  dry-run:
+    name: Build and Run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build dockerfile
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          load: true
+          tags: wtcheap.api:latest-ci
+          context: .
+          file: ./Dockerfile.api
+      - uses: supercharge/mongodb-github-action@1.11.0
+      - name: Dry run image
+        run: |
+          chmod +x ./.github/dry-run.sh
+          ./.github/dry-run.sh api
+        env:
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+          MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
+          MAILGUN_SENDER: ${{ secrets.MAILGUN_SENDER }}

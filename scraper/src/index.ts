@@ -6,7 +6,7 @@ import { availableAlertNeeded, discountAlertNeeded, triggerAlertsForAvailable, t
 import { SHOP_2022_SELECTORS, TARGET_ROOTS } from './constants.js';
 import { waybackMain } from './wayback.js';
 import { ensureIndices } from './db/ensureIndices.js';
-import { enqueueStoreMedia } from './util/storeMedia.js';
+import { storeMedia } from './util/storeMedia.js';
 
 export const clog = new Clog(LOGLEVEL.DEBUG);
 
@@ -41,7 +41,7 @@ const main = async () => {
 
     if (!matchingItem) {
       item.firstAvailableAt = new Date();
-      enqueueStoreMedia(item);
+      storeMedia(item);
     }
 
     if (matchingItem && !matchingItem.firstAvailableAt) {
