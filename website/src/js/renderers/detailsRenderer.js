@@ -42,8 +42,7 @@ export class DetailsRenderer extends EventTarget {
     const slidesContainer = document.createElement('div');
     slidesContainer.classList.add('carousel__slides');
 
-    // TODO: Handle sources no longer being available
-    data.details.media.forEach((media) => {
+    data?.details?.media.forEach((media) => {
       const mediaParts = media.split(';');
       const isVideo = mediaParts[0].endsWith('.webm') || mediaParts[0].endsWith('.mp4');
 
@@ -105,7 +104,7 @@ export class DetailsRenderer extends EventTarget {
     const pricing = document.createElement('span');
     pricing.classList.add('details__pricing');
 
-    if (data.isDiscounted) {
+    if (data.isDiscounted && data.buyable) {
       const oldPrice = document.createElement('p');
       oldPrice.classList.add('details__price', 'details__price-old');
 
@@ -123,7 +122,7 @@ export class DetailsRenderer extends EventTarget {
       const price = document.createElement('p');
       price.classList.add('details__price');
 
-      let priceValue = data.defaultPrice;
+      let priceValue = data.defaultPrice ?? data.oldPrice;
 
       if (this.referalRenderer && data.category !== 'GoldenEagles') {
         priceValue *= this.referalRenderer.discountFactor;
@@ -137,7 +136,7 @@ export class DetailsRenderer extends EventTarget {
 
     const discount = document.createElement('p');
     discount.classList.add('details__discount', 'muted');
-    discount.textContent = data.isDiscounted
+    discount.textContent = data.isDiscounted && data.buyable
       ? `${data.discountPercent || 0}% discount over normal price`
       : 'Normal pricing for this item';
     infoLeft.appendChild(discount);
@@ -260,20 +259,29 @@ export class DetailsRenderer extends EventTarget {
     const descriptionHeader = document.createElement('p');
     descriptionHeader.classList.add('details__description-header');
     descriptionHeader.textContent = 'This pack includes';
-    infoRight.appendChild(descriptionHeader);
 
     const descriptionShort = document.createElement('p');
     descriptionShort.classList.add('details__description-short');
-    descriptionShort.textContent = data.description;
-    infoRight.appendChild(descriptionShort);
+
+
+    if (data.description) {
+      if (data.description?.indexOf(';') > -1) {
+        data.description = data.description.split(';').join('\n');
+      }
+
+      infoRight.appendChild(descriptionHeader);
+      descriptionShort.textContent = data.description;
+      infoRight.appendChild(descriptionShort);
+    }
 
     const scrapeInfo = document.createElement('p');
     scrapeInfo.classList.add('details__scrape-info', 'muted', 'margin-top-sm');
     scrapeInfo.innerHTML = `ID: ${data.id}<br>`;
     scrapeInfo.innerHTML += `Source: ${this.capitalize(data.source || 'live')}<br>`;
     if (!data.buyable) scrapeInfo.innerHTML += `Store link: <a href="${data.href}" target="_blank">${data.href}</a><br>`;
-    scrapeInfo.innerHTML += `First seen: ${new Date(data.createdAt).toDateString()}<br>`;
+    scrapeInfo.innerHTML += `First available: ${new Date(data.firstAvailableAt ?? data.createdAt).toDateString()}<br>`;
     if (!data.buyable && data.lastAvailableAt) scrapeInfo.innerHTML += `Last available: ${new Date(data.lastAvailableAt).toDateString()}<br>`;
+    scrapeInfo.innerHTML += `First scraped: ${new Date(data.createdAt).toDateString()}<br>`;
     scrapeInfo.innerHTML += `Last scraped: ${new Date(data.updatedAt).toDateString()}`;
     infoRight.appendChild(scrapeInfo);
 
@@ -285,7 +293,7 @@ export class DetailsRenderer extends EventTarget {
 
     const descriptionLong = document.createElement('div');
     descriptionLong.classList.add('details__description-long');
-    descriptionLong.textContent = data.details.description;
+    descriptionLong.textContent = data.details?.description;
     descriptionLongWrapper.appendChild(descriptionLong);
 
     detailWrapper.appendChild(descriptionLongWrapper);

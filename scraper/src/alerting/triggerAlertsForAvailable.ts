@@ -1,4 +1,4 @@
-import { Item, MailAvailableFactory, findAlerts } from 'wtcheap.shared';
+import { Item, MailAvailableFactory, queryAlerts } from 'wtcheap.shared';
 
 import { clog } from '../index.js';
 import { availableAlertNeeded } from './alertNeeded.js';
@@ -10,7 +10,7 @@ export const triggerAlertsForAvailable = async (currentItem: Item, previousItem:
 
   clog.log(`Triggering availability alerts for ${currentItem.title}`);
 
-  const alerts = await findAlerts({ eventType: 'itemAvailable', itemId: currentItem.id });
+  const alerts = await queryAlerts({ eventType: 'itemAvailable', itemId: currentItem.id });
 
   for (const alert of alerts) {
     const factory = new MailAvailableFactory(alert, currentItem);

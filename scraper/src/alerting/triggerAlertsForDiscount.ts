@@ -1,4 +1,4 @@
-import { Item, MailDiscountFactory, findAlerts } from 'wtcheap.shared';
+import { Item, MailDiscountFactory, queryAlerts } from 'wtcheap.shared';
 
 import { clog } from '../index.js';
 import { discountAlertNeeded } from './alertNeeded.js';
@@ -10,7 +10,7 @@ export const triggerAlertsForDiscount = async (currentItem: Item, previousItem: 
 
   clog.log(`Triggering discount alerts for ${currentItem.title}`);
 
-  const alerts = await findAlerts({ eventType: 'priceChange', itemId: currentItem.id });
+  const alerts = await queryAlerts({ eventType: 'priceChange', itemId: currentItem.id });
 
   for (const alert of alerts) {
     const factory = new MailDiscountFactory(alert, currentItem);

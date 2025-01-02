@@ -1,48 +1,19 @@
 import puppeteer, { Page } from 'puppeteer';
 import { LOGLEVEL } from '@fdebijl/clog';
-import { Item, upsertItem } from 'wtcheap.shared';
+import { findItem, insertPrice, Item, Price, upsertItem } from 'wtcheap.shared';
 import { franc } from 'franc';
 
-import { deepCheckItem, findNon404Memento, getCurrentItems, isItemBuyable, matchSelectors } from './scrapers/index.js';
+import { deepCheckItem, findBestMemento, getCurrentItems, isItemBuyable, matchSelectors } from './scrapers/index.js';
 import { clog } from './index.js';
 import { getArchiveSnapshots } from './scrapers/getArchiveSnapshots.js';
-import { SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants.js';
+import { LAUNCH_HEADLESS, SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants.js';
+import { containsNonLatinCharacters, enqueueStoreMedia } from './util/index.js';
 
 const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
 
-const containsNonLatinCharacters = (input: string): boolean => {
-  // eslint-disable-next-line no-control-regex
-  const nonLatinRegex = /[^\u0000-\u007F\u0100-\u024F\s.,;:'"\-()[\]{}!?0-9/]/;
-
-  return nonLatinRegex.test(input);
-}
-
-const validateMediaSources = async (media: string[]): Promise<string[]> => {
-  const validatedMedia = [];
-
-  for (const source of media) {
-    let fixedSource = source;
-    if (source.startsWith('/')) {
-      fixedSource = `https://static-store.gaijin.net${source}`;
-    }
-    try {
-      const response = await fetch(fixedSource, { method: 'HEAD' });
-      if (response.ok) {
-        validatedMedia.push(fixedSource);
-      } else {
-        clog.log(`Source ${fixedSource} returned ${response.status}, removing`, LOGLEVEL.DEBUG);
-      }
-    } catch (e) {
-      clog.log(`Error fetching source ${fixedSource}: ${e}`, LOGLEVEL.ERROR);
-    }
-  }
-
-  return validatedMedia;
-};
-
 const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> => {
   const liveLink = `${item.href}`;
-  const safeUrl = await findNon404Memento(item.href, page.browser());
+  const safeUrl = await findBestMemento(item.href, page.browser());
 
   if (!safeUrl) {
     clog.log(`Item ${item.id} "${item.title}" is a 404 on every snapshot, skipping`, LOGLEVEL.DEBUG);
@@ -67,13 +38,13 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
 
     switch (selectors) {
       case SHOP_2022_SELECTORS: {
-        clog.log('Using 2022 selectors for detail page under scrape');
+        clog.log('Using 2022 selectors for detail page under scrape', LOGLEVEL.DEBUG);
         break;
       } case SHOP_2021_SELECTORS: {
-        clog.log('Using 2021 selectors for detail page under scrape');
+        clog.log('Using 2021 selectors for detail page under scrape', LOGLEVEL.DEBUG);
         break;
       } case SHOP_2016_SELECTORS: {
-        clog.log('Using 2016 selectors for detail page under scrape');
+        clog.log('Using 2016 selectors for detail page under scrape', LOGLEVEL.DEBUG);
         break;
       }
     }
@@ -83,7 +54,7 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
       return null;
     }
 
-    const deepCheckedItem = await deepCheckItem({ item, selectors, page, skip404Check: true, skipPriceAssignment: true });
+    const deepCheckedItem = await deepCheckItem({ item, selectors, page, skip404Check: true, skipPriceAssignment: true, skipNav: true });
     deepCheckedItem.buyable = await isItemBuyable(liveLink);
     deepCheckedItem.href = liveLink;
 
@@ -98,27 +69,14 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
       return null;
     }
 
-    if (deepCheckedItem.details?.media) {
-      const validatedMedia = await validateMediaSources(deepCheckedItem.details.media);
-      deepCheckedItem.details.media = validatedMedia;
-    }
-
-    if (deepCheckedItem.poster) {
-      const validatedPoster = await validateMediaSources([deepCheckedItem.poster]);
-
-      if (validatedPoster.length > 0) {
-        deepCheckedItem.poster = validatedPoster[0];
-      } else {
-        deepCheckedItem.poster = deepCheckedItem.details?.media?.find((source) => source.endsWith('.jpg') || source.endsWith('.png'));
-      }
-    }
-
     clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
     await upsertItem(deepCheckedItem);
 
-    // TODO: Insert price
-    // TODO: Backdate createdAt, make sure this only happens once for every item
-    // TODO: Store poster and media in a NFS volume so the website can display it
+    const archivePrefix = safeUrl.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0] as string;
+    if (archivePrefix) {
+      const prefix = archivePrefix + 'im_/';
+      enqueueStoreMedia(item, prefix).catch(e => clog.log(`Error storing media for item ${item.id} "${item.title}": ${e}`, LOGLEVEL.WARN));
+    }
 
     return deepCheckedItem;
   } catch (e) {
@@ -130,11 +88,48 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
 const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item[]): Promise<Item[]> => {
   clog.log(`Scraping root ${root.url} (${root.datetime.toISOString()})`, LOGLEVEL.DEBUG);
 
-  const items = await getCurrentItems({ targetRoots: [root.url], slowMode: true, ignoreDiscounts: true, skipDeepCheck: true });
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+  const items = await getCurrentItems({ targetRoots: [root.url], slowMode: true, ignoreDiscounts: false, skipDeepCheck: true });
+  const browser = await puppeteer.launch({ headless: LAUNCH_HEADLESS, args: ['--no-sandbox'] });
   const page = await browser.pages().then((pages) => pages[0]);
   page.setDefaultNavigationTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
   page.setDefaultTimeout(WAYBACK_MACHINE_PAGE_TIMEOUT);
+
+  for (const item of items) {
+    // Assume unbuyable since we're scraping the archive, normal scraping run will rectify this if false
+    item.buyable = false;
+    item.source = 'archive';
+
+    // Backdate first available date if necessary
+    const existingItem = await findItem(item.id);
+    if (existingItem?.firstAvailableAt) {
+      if (existingItem.firstAvailableAt.getTime() < root.datetime.getTime()) {
+        item.firstAvailableAt = root.datetime;
+      }
+    } else {
+      item.firstAvailableAt = root.datetime;
+    }
+
+    // We already upsert here so that the item is in the DB, even if there are no memento's for the details page
+    await upsertItem(item);
+
+    const archivePrefix = root.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0] as string;
+    if (archivePrefix) {
+      const prefix = archivePrefix + 'im_/';
+      enqueueStoreMedia(item, prefix).catch(e => clog.log(`Error storing media for item ${item.id} "${item.title}": ${e}`, LOGLEVEL.WARN));
+    }
+
+    const price: Price = {
+      itemId: item.id,
+      date: root.datetime,
+      defaultPrice: item.defaultPrice,
+      oldPrice: item.oldPrice,
+      newPrice: item.newPrice,
+      isDiscounted: item.isDiscounted,
+      discountPercent: item.discountPercent,
+    };
+
+    await insertPrice(price);
+  }
 
   const unseenItems = items.filter((item) => !seenItems.some((seenItem) => seenItem.id === item.id));
   const usableItems = [];

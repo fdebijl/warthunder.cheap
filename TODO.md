@@ -2,6 +2,12 @@ Todo:
 - Website
   - Search
   - Filtering
+    - Nation
+    - Rank
+    - Type (i.e. plane, vehicle, helicopter, or vessel, we don't collect this rn)
+  - Sorting
+    - Price
+    - Date
   - SEO
   - Hide alert button if user already has an alert for this item
   - analytics.floris.amsterdam hookup?
@@ -15,3 +21,5 @@ Todo:
   - Save scraped image locally (to an NFS share, for example) instead of hotlinking Gaijin's versions, in case they get deleted
   - Improve timings/reduce timeout duration for wayback scrapes
   - Save all-404/no-memento items and skip those
+  - Bundles always have undetermined description language, even if it's actually English
+  - Address archive.org rate limiting

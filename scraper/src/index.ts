@@ -6,8 +6,12 @@ import { availableAlertNeeded, discountAlertNeeded, triggerAlertsForAvailable, t
 import { SHOP_2022_SELECTORS, TARGET_ROOTS } from './constants.js';
 import { waybackMain } from './wayback.js';
 import { ensureIndices } from './db/ensureIndices.js';
+import { enqueueStoreMedia } from './util/storeMedia.js';
 
 export const clog = new Clog(LOGLEVEL.DEBUG);
+
+const isWaybackRun = process.argv.includes('--wayback');
+const isPricingRun = process.argv.includes('--pricing');
 
 const main = async () => {
   await ensureIndices();
@@ -35,20 +39,31 @@ const main = async () => {
       await triggerAlertsForAvailable(item, matchingItem);
     }
 
+    if (!matchingItem) {
+      item.firstAvailableAt = new Date();
+      enqueueStoreMedia(item);
+    }
+
+    if (matchingItem && !matchingItem.firstAvailableAt) {
+      item.firstAvailableAt = matchingItem.createdAt;
+    }
+
     item.source = 'live';
     await upsertItem(item);
 
-    const price: Price = {
-      itemId: item.id,
-      date: new Date(),
-      defaultPrice: item.defaultPrice,
-      newPrice: item.newPrice,
-      oldPrice: item.oldPrice,
-      isDiscounted: item.isDiscounted,
-      discountPercent: item.discountPercent
-    };
+    if (isPricingRun) {
+      const price: Price = {
+        itemId: item.id,
+        date: new Date(),
+        defaultPrice: item.defaultPrice,
+        newPrice: item.newPrice,
+        oldPrice: item.oldPrice,
+        isDiscounted: item.isDiscounted,
+        discountPercent: item.discountPercent
+      };
 
-    await insertPrice(price);
+      await insertPrice(price);
+    }
   }
 
   for (const knownItem of notCurrentKnownItems) {
@@ -69,7 +84,7 @@ const main = async () => {
   process.exit(0);
 };
 
-if (process.argv.includes('--wayback')) {
+if (isWaybackRun) {
   waybackMain();
 } else {
   clog.log(`Starting scraping run at ${new Date().toISOString()}`);

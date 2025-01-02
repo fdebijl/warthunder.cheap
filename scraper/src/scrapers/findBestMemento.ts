@@ -4,7 +4,7 @@ import { LOGLEVEL } from '@fdebijl/clog';
 import { getArchiveSnapshots } from './getArchiveSnapshots.js';
 import { clog } from '../index.js';
 
-export const findNon404Memento = async (url: string, browser: Browser): Promise<{ url: string; datetime: Date; } | null> => {
+export const findBestMemento = async (url: string, browser: Browser): Promise<{ url: string; datetime: Date; } | null> => {
   const mementos = await getArchiveSnapshots(url);
 
   if (mementos['memento'] === undefined) {
@@ -43,7 +43,7 @@ export const findNon404Memento = async (url: string, browser: Browser): Promise<
     })
   );
 
-  clog.log(`Found ${results.filter((result) => result !== null).length} non-404 mementos out of ${mementos['memento'].length} total mementos for ${url}`, LOGLEVEL.DEBUG);
+  clog.log(`Found ${results.filter((result) => result !== null).length} usable mementos out of ${mementos['memento'].length} total mementos for ${url}`, LOGLEVEL.DEBUG);
 
   return results.find((result) => result !== null) || null;
 };

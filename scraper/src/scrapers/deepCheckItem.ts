@@ -3,12 +3,15 @@ import { Item, SelectorSet } from 'wtcheap.shared';
 import { LOGLEVEL } from '@fdebijl/clog';
 import { milliseconds } from '@fdebijl/pog';
 
-import { PERMA_SALE_ITEM_IDS } from '../constants.js';
+import { LAUNCH_HEADLESS, PERMA_SALE_ITEM_IDS } from '../constants.js';
 import { clog } from '../index.js';
 import { isItemBuyable } from './isItemBuyable.js';
 import { getDetailsOnPage } from './getDetailsOnPage.js';
 
-export const deepCheckItem = async ({ item, selectors, page, skip404Check = false, skipPriceAssignment = false }: { item: Item, selectors: SelectorSet, page?: Page, skip404Check?: boolean, skipPriceAssignment?: boolean }): Promise<Item> => {
+export const deepCheckItem = async (
+  { item, selectors, page, skip404Check = false, skipPriceAssignment = false, skipNav = false }:
+  { item: Item, selectors: SelectorSet, page?: Page, skip404Check?: boolean, skipPriceAssignment?: boolean, skipNav?: boolean }
+): Promise<Item> => {
   item = { ...item };
 
   if (!skip404Check) {
@@ -22,12 +25,13 @@ export const deepCheckItem = async ({ item, selectors, page, skip404Check = fals
   }
 
   if (!page) {
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+    const browser = await puppeteer.launch({ headless: LAUNCH_HEADLESS, args: ['--no-sandbox'] });
     page = await browser.newPage();
   }
 
-  // TODO: During wayback runs the page will already be on the right url, so we can skip this step
-  await page.goto(item.href, { waitUntil: 'networkidle2' });
+  if (!skipNav) {
+    await page.goto(item.href, { waitUntil: 'networkidle2' });
+  }
 
   await Promise.race([
     milliseconds(30_000 - 10).then(() => { throw new Error('Could not find description during wait before getDetailsOnPage') }),

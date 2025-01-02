@@ -38,10 +38,12 @@ export interface Item {
     /** Extended description from the item's store page */
     description?: string,
   };
-  /** Date the item was first seen */
+  /** Date the item was entered into the DB */
   createdAt?: Date;
-  /** Date the item was last updated */
+  /** Date the item was last updated in the DB */
   updatedAt?: Date;
+  /** Date the item was first seen and available */
+  firstAvailableAt?: Date;
   /** Date the item was last available */
   lastAvailableAt?: Date;
 }

@@ -1,18 +1,11 @@
 import { ObjectId } from 'mongodb';
 
-import { Alert, EventType } from '../../domain/index.js';
+import { Alert } from '../../domain/index.js';
 import { connect } from '../connect.js';
 
-type FindAlertsQuery = {
-  _id?: ObjectId;
-  eventType?: EventType;
-  itemId?: number;
-  recipient?: string;
-}
-
-export const findAlerts = async (query: FindAlertsQuery): Promise<Alert[]> => {
+export const findAlert = async (id: ObjectId): Promise<Alert | null> => {
   const db = await connect();
   const collection = db.collection('alerts');
 
-  return collection.find<Alert>(query).toArray();
+  return collection.findOne<Alert>({ _id: id });
 };

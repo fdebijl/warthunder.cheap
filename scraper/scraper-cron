@@ -1,1 +1,2 @@
-0 */12 * * * /usr/local/bin/node /usr/src/scraper/index.js > /proc/1/fd/1 2>/proc/1/fd/2
+0 17 * * * /usr/local/bin/node /usr/src/app/scraper/index.js --pricing > /proc/1/fd/1 2>/proc/1/fd/2
+15,45 * * * * /usr/local/bin/node /usr/src/app/scraper/index.js > /proc/1/fd/1 2>/proc/1/fd/2
