@@ -30,4 +30,4 @@ trap 'cleanup' EXIT
   -e MAILGUN_SENDER \
   --network host \
   --rm wtcheap.$1:latest-ci \
-  timeout --preserve-status 15 node index.js) 2>&1 | tee dry-run.log
+  timeout --preserve-status 5 node index.js) 2>&1 | tee dry-run.log
