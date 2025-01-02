@@ -7,6 +7,7 @@ import { SHOP_2022_SELECTORS, TARGET_ROOTS } from './constants.js';
 import { waybackMain } from './wayback.js';
 import { ensureIndices } from './db/ensureIndices.js';
 import { storeMedia } from './util/storeMedia.js';
+import { milliseconds } from '@fdebijl/pog';
 
 export const clog = new Clog(LOGLEVEL.DEBUG);
 
@@ -87,6 +88,7 @@ const main = async () => {
 if (isWaybackRun) {
   waybackMain();
 } else {
-  clog.log(`Starting scraping run at ${new Date().toISOString()}`);
+  clog.log(`Starting scraping run at ${new Date().toISOString()}, press CTRL+C to cancel`);
+  await milliseconds(5_000);
   main();
 }
