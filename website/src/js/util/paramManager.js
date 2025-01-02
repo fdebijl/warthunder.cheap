@@ -29,7 +29,7 @@ export class ParamManager {
   }
 
   bindEvents() {
-    this.referalRenderer.addEventListener('partner_changed', (e) => {
+    this.referalRenderer.addEventListener('partner_changed', () => {
       if (this.referalRenderer.partner) {
         this.params.partner = this.referalRenderer.partner.partner_name;
       } else {
@@ -39,12 +39,12 @@ export class ParamManager {
       this.updateUrl();
     });
 
-    this.detailsRenderer.addEventListener('item_selected', (e) => {
+    this.detailsRenderer.addEventListener('item_selected', () => {
       this.params.item = this.detailsRenderer.item.id;
       this.updateUrl();
     });
 
-    this.detailsRenderer.addEventListener('item_dismissed', (e) => {
+    this.detailsRenderer.addEventListener('item_dismissed', () => {
       this.params.item = null;
       this.updateUrl();
     });

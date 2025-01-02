@@ -136,6 +136,8 @@ export class ReferalRenderer extends EventTarget {
     if (this.partner) {
       return `&partner=${this.partner.partner_slug}&partner_val=${this.partner.partner_val}`;
     }
+
+    return '';
   }
 
   get discountFactor() {

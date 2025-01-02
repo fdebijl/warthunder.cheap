@@ -145,6 +145,7 @@ export class ItemRenderer {
 
   appendTo(selector) {
     const container = document.querySelector(selector);
+
     if (container) {
       const itemElement = this.generateItemElement();
       container.appendChild(itemElement);
@@ -153,9 +154,11 @@ export class ItemRenderer {
 
   capitalize(str) {
     const lower = str.toLowerCase();
+
     if (this.fullCapsNations.includes(lower)) {
       return lower.toUpperCase();
     }
+
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 }
