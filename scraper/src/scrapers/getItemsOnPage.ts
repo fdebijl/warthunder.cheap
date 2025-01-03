@@ -3,18 +3,18 @@ import { LOGLEVEL } from '@fdebijl/clog';
 import { Item, SelectorSet } from 'wtcheap.shared';
 
 import { PERMA_SALE_ITEM_IDS, SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from '../constants.js';
-import { clog } from '../index.js';
+import { clog, isWaybackRun } from '../index.js';
 
 export const getItemsOnPage = async ({ page, selectors, category, ignoreDiscounts }: { page: Page, selectors: SelectorSet, category: Item['category'], ignoreDiscounts: boolean }): Promise<Item[]> => {
   switch (selectors) {
     case SHOP_2022_SELECTORS: {
-      clog.log('Using 2022 selectors for page under scrape', LOGLEVEL.DEBUG);
+      isWaybackRun && clog.log('Using 2022 selectors for page under scrape', LOGLEVEL.DEBUG);
       return getItemsOnPage2022(page, selectors, category, ignoreDiscounts);
     } case SHOP_2021_SELECTORS: {
-      clog.log('Using 2021 selectors for page under scrape', LOGLEVEL.DEBUG);
+      isWaybackRun && clog.log('Using 2021 selectors for page under scrape', LOGLEVEL.DEBUG);
       return getItemsOnPage2021(page, selectors, category, ignoreDiscounts);
     } case SHOP_2016_SELECTORS: {
-      clog.log('Using 2016 selectors for page under scrape', LOGLEVEL.DEBUG);
+      isWaybackRun && clog.log('Using 2016 selectors for page under scrape', LOGLEVEL.DEBUG);
       return getItemsOnPage2016(page, selectors, category, ignoreDiscounts);
     } default: {
       throw new Error(`Unknown selectors: ${selectors}`);

@@ -11,8 +11,9 @@ import { milliseconds } from '@fdebijl/pog';
 
 export const clog = new Clog(LOGLEVEL.DEBUG);
 
-const isWaybackRun = process.argv.includes('--wayback');
-const isPricingRun = process.argv.includes('--pricing');
+export const isWaybackRun = process.argv.includes('--wayback');
+export const isPricingRun = process.argv.includes('--pricing');
+export const isImagingRun = process.argv.includes('--imaging');
 
 const main = async () => {
   await ensureIndices();
@@ -42,7 +43,10 @@ const main = async () => {
 
     if (!matchingItem) {
       item.firstAvailableAt = new Date();
-      storeMedia(item);
+
+      if (isImagingRun) {
+        await storeMedia(item);
+      }
     }
 
     if (matchingItem && !matchingItem.firstAvailableAt) {
