@@ -11,9 +11,11 @@ import { containsNonLatinCharacters, enqueueStoreMedia } from './util/index.js';
 
 const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
 const isImagingRun = process.argv.includes('--imaging');
+const isReverseRun = process.argv.includes('--reverse');
 
 const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> => {
   const liveLink = `${item.href}`;
+  // TODO: Best memento should be closest to root datetime
   const safeUrl = await findBestMemento(item.href, page.browser());
 
   if (!safeUrl) {
@@ -65,14 +67,17 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
     }
 
     const descriptionLang = franc(deepCheckedItem.details?.description);
-    if (descriptionLang !== 'eng') {
+    const hasDescription = !!deepCheckedItem.details?.description;
+    if (hasDescription && descriptionLang !== 'eng') {
       clog.log(`Item ${item.id} "${item.title}" has a non-english description (${descriptionLang}), skipping`, LOGLEVEL.DEBUG);
       return null;
     }
 
     clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
-    // TODO: Should we upsert if the item already exists?
-    await upsertItem(deepCheckedItem);
+    const exists = await findItem(deepCheckedItem.id);
+    if (!exists || !exists.buyable) {
+      await upsertItem(deepCheckedItem);
+    }
 
     if (isImagingRun) {
       const archivePrefix = safeUrl.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0] as string;
@@ -114,8 +119,10 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
     }
 
     // We already upsert here so that the item is in the DB, even if there are no memento's for the details page
-    // TODO: Should we upsert if the item already exists?
-    await upsertItem(item);
+    const exists = await findItem(item.id);
+    if (!exists || !exists.buyable) {
+      await upsertItem(item);
+    }
 
     if (isImagingRun) {
       const archivePrefix = root.url.match(/https:\/\/web.archive.org\/web\/\d{14}/)?.[0] as string;
@@ -166,6 +173,10 @@ export const waybackMain = async () => {
 
   const memento = await getArchiveSnapshots('https://store.gaijin.net/catalog.php?category=WarThunderPacks');
   const roots = memento.memento.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
+
+  if (isReverseRun) {
+    roots.reverse();
+  }
 
   clog.log(`Found ${roots.length} mementos`);
 

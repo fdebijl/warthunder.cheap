@@ -6,6 +6,8 @@ Flags:
 ```bash
   --wayback
         Scrape from wayback machine instead of the live store
+  --reverse
+        [Only for --wayback] Scrape in reverse chronological order
   --pricing
         Store pricing information for each scraped item
   --imaging

@@ -33,9 +33,9 @@ export const getDetailsOnPage = async ({ page, selectors }: { page: Page, select
 
 const getDetailsOnPage2022 = async (page: Page, selectors: SelectorSet): Promise<DetailsInfo> => {
   const detailsInfo = await page.evaluate((SELECTORS) => {
-    const oldPriceEl = document.querySelector(SELECTORS.ITEM__OLD_PRICE);
-    const newPriceEl = document.querySelector(SELECTORS.ITEM__NEW_PRICE);
-    const defaultPriceEl = document.querySelector(SELECTORS.ITEM__DEFAULT_PRICE);
+    const oldPriceEl = document.querySelector(SELECTORS.PAGE__OLD_PRICE);
+    const newPriceEl = document.querySelector(SELECTORS.PAGE__NEW_PRICE);
+    const defaultPriceEl = document.querySelector(SELECTORS.PAGE__DEFAULT_PRICE);
     const media = [...document.querySelectorAll<HTMLDivElement>(SELECTORS.PAGE__MEDIA)].map((el) => el.dataset.fullSizeMediaUrl!);
     const description = document.querySelector(SELECTORS.PAGE__DESCRIPTION)?.textContent?.trim();
     const shortDescription = Array.from(
@@ -69,9 +69,9 @@ const getDetailsOnPage2021 = async (page: Page, selectors: SelectorSet): Promise
 
 const getDetailsOnPage2016 = async (page: Page, selectors: SelectorSet): Promise<DetailsInfo> => {
   const detailsInfo = await page.evaluate((SELECTORS) => {
-    const oldPriceEl = document.querySelector(SELECTORS.ITEM__OLD_PRICE);
-    const newPriceEl = document.querySelector(SELECTORS.ITEM__NEW_PRICE);
-    const defaultPriceEl = document.querySelector(SELECTORS.ITEM__DEFAULT_PRICE);
+    const oldPriceEl = document.querySelector(SELECTORS.PAGE__OLD_PRICE);
+    const newPriceEl = document.querySelector(SELECTORS.PAGE__NEW_PRICE);
+    const defaultPriceEl = document.querySelector(SELECTORS.PAGE__DEFAULT_PRICE);
     const media = [...document.querySelectorAll<HTMLImageElement>(SELECTORS.PAGE__MEDIA)].map((el) => el.src);
     const description = document.querySelector(SELECTORS.PAGE__DESCRIPTION)?.textContent?.trim();
     const shortDescription = Array.from(
