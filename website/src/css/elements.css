@@ -30,6 +30,7 @@ header {
   background: rgba(26, 32, 40, 0.8);
   padding: 3rem 2rem;
   position: relative;
+  overflow: hidden;
 }
 
 header img {
@@ -93,39 +94,6 @@ footer {
 
 main {
   padding: 2rem;
-}
-
-nav {
-  display: flex;
-  width: 100%;
-  background: #1A2028;
-}
-
-nav > ul {
-  list-style: none;
-  display: flex;
-  flex-flow: row wrap;
-  height: auto;
-  padding-left: 0;
-  margin: 0;
-}
-
-nav > ul > li {
-  display: flex;
-}
-
-nav > ul > li > a {
-  color: #FFF;
-  text-decoration: none;
-  font-family: 'Fira Sans', sans-serif;
-  font-weight: 300;
-  padding: 1em 2em;
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-nav > ul > li > a.active {
-  background: #27323F;
-  border-bottom: 1px solid #27323F;
 }
 
 a {

@@ -2,6 +2,8 @@ import { ItemRenderer } from './renderers/itemRenderer.js';
 import { DetailsRenderer } from './renderers/detailsRenderer.js';
 import { ReferalRenderer } from './renderers/referalRenderer.js';
 import { AlertRenderer } from './renderers/alertRenderer.js';
+import { NavRenderer } from './renderers/navRenderer.js';
+
 import { ParamManager } from './util/paramManager.js';
 import { loadModals } from './util/loadModals.js';
 import { loadHeader } from './util/loadHeader.js';
@@ -38,10 +40,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const archivedItems = await fetch(`${API_URL}/items/archived`).then((res) => res.json());
 
-  if (archivedItems.length === 0) {
-    document.querySelector('.itemcategory.archived').classList.add('hidden');
-  }
-
   archivedItems.forEach((item) => {
     const renderer = new ItemRenderer(item, referalRenderer, detailsRenderer);
     renderer.appendTo('.itemcategory.archived .itemgrid');
@@ -59,35 +57,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadModals();
   loadHeader();
 
+  const navRenderer = new NavRenderer(allItems);
+  document.querySelector('.nav__toggle').addEventListener('click', navRenderer.toggleNav);
+
   document.querySelectorAll('.fadeloading').forEach((element) => {
     element.classList.remove('fadeloading');
     element.classList.add('fadeloaded');
   });
-});
 
-document.querySelectorAll('.navtab').forEach((tab) => {
-  tab.addEventListener('click', async (event) => {
-    event.preventDefault();
+  window.wtCheap = {
+    referalRenderer,
+    detailsRenderer,
+    alertRenderer,
+    paramManager,
+    navRenderer,
+    currentItems,
+    archivedItems
+  };
 
-    document.querySelector('.navtab.active').classList.remove('active');
-    tab.classList.add('active');
-
-    const category = tab.dataset.filterCategory;
-
-    if (category === 'All') {
-      document.querySelectorAll('.item').forEach((item) => {
-        item.classList.remove('hidden');
-      });
-
-      return;
-    }
-
-    document.querySelectorAll('.item').forEach((item) => {
-      if (item.classList.contains(`item-category-${category}`)) {
-        item.classList.remove('hidden');
-      } else {
-        item.classList.add('hidden');
-      }
-    });
-  });
+  console.log('Evaluate `window.wtCheap` to debug/inspect the renderers');
 });

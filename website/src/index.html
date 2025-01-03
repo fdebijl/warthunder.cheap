@@ -50,15 +50,24 @@
   </header>
 
   <nav>
-    <ul>
-      <li><a href="#" class="navtab active" data-filter-category="All">All</a></li>
-      <li><a href="#" class="navtab" data-filter-category="WarThunderPacks">Vehicles</a></li>
-      <li><a href="#" class="navtab" data-filter-category="GoldenEagles">Golden Eagles</a></li>
-      <li><a href="#" class="navtab" data-filter-category="PremiumAccount">Premium Account</a></li>
+    <ul class="filter__categories">
+      <li class="filter__header">Categories</li>
+      <!-- Categories get injected here -->
     </ul>
+    <ul class="filter__nations">
+      <li class="filter__header">Nations</li>
+      <!-- Nations get injected here -->
+    </ul>
+    <ul class="filter__ranks">
+      <li class="filter__header">Ranks</li>
+      <!-- Ranks get injected here -->
   </nav>
 
+  <button class="nav__toggle fab compact">Toggle filters</button>
+
   <main>
+    <div class="no-results">No results match your filters</div>
+
     <section class="itemcategory current fadeloading">
       <h1 class="itemgrid__header">Current Items</h1>
       <h4 class="itemgrid__subheader">Items currently available in the War Thunder store.</h4>
@@ -131,6 +140,11 @@
       <p class="qa">
         <span class="q">I changed the referal code but it still shows the previous one on the store</span>
         <span class="a">Referal codes in the Gaijin Store are cached for an hour through cookies, clear your cookies and you should be able to select a new referal code.</span>
+      </p>
+
+      <p class="qa">
+        <span class="q">There's some days missing in the charts :(</span>
+        <span class="a">Warthunder.cheap is still in development, meaning the scraper isn't 100% reliable yet, so it might miss a day here and there.</span>
       </p>
 
       <p class="qa">

@@ -1,3 +1,6 @@
+import { capitalize } from '../util/capitalize.js';
+import { romanToNumericalRank } from '../util/romanToNumericalRank.js';
+
 /** The ItemRenderer handles rendering the item cards into the itemgrids */
 export class ItemRenderer {
   id;
@@ -6,7 +9,6 @@ export class ItemRenderer {
   constructor(data, referalRenderer, detailsRenderer) {
     this.data = data;
     this.id = data.id;
-    this.fullCapsNations = ['usa', 'ussr'];
     this.referalRenderer = referalRenderer;
     this.detailsRenderer = detailsRenderer;
 
@@ -15,8 +17,12 @@ export class ItemRenderer {
 
   generateItemElement() {
     const itemDiv = document.createElement('div');
-    itemDiv.classList.add('item', `item-category-${this.data.category}`);
-    itemDiv.setAttribute('data-item-id', this.data.id);
+    itemDiv.classList.add('item');
+    itemDiv.dataset.itemId = this.data.id;
+    itemDiv.dataset.category = this.data.category;
+    itemDiv.dataset.nation = this.data.nation;
+    itemDiv.dataset.rank = this.data.rank;
+    itemDiv.dataset.rankNo = romanToNumericalRank(this.data.rank);
 
     const posterName = this.data.poster.split('/').pop();
     const fallbackSrc = `media/${this.data.id}/${posterName}`;
@@ -58,7 +64,7 @@ export class ItemRenderer {
       if (this.data.nation) {
         const countrySpan = document.createElement('span');
         countrySpan.classList.add('item__meta__country');
-        countrySpan.textContent = this.capitalize(this.data.nation);
+        countrySpan.textContent = capitalize(this.data.nation);
         meta.appendChild(countrySpan);
       }
 
@@ -79,6 +85,7 @@ export class ItemRenderer {
       this.priceElement.classList.add('normal');
       discount.textContent = 'Last known price';
       discount.classList.add('normal');
+      itemDiv.dataset.price = price.toFixed(2);
     } else if (!this.data.buyable) {
       this.priceElement.classList.add('hidden');
       discount.textContent = 'No longer available, no price on record';
@@ -88,11 +95,13 @@ export class ItemRenderer {
       this.priceElement.classList.add('discounted');
       discount.textContent = `Discounted by ${this.data.discountPercent.toFixed(2) || 0}%, normally €${this.data.oldPrice.toFixed(2)}`;
       discount.classList.add('discounted');
+      itemDiv.dataset.price = this.data.newPrice.toFixed(2);
     } else {
       this.priceElement.textContent = `€${this.data.defaultPrice.toFixed(2)}`;
       this.priceElement.classList.add('normal');
       discount.textContent = 'Normal pricing for this item';
       discount.classList.add('normal');
+      itemDiv.dataset.price = this.data.defaultPrice.toFixed(2);
     }
 
     infoDiv.appendChild(this.priceElement);
@@ -150,15 +159,5 @@ export class ItemRenderer {
       const itemElement = this.generateItemElement();
       container.appendChild(itemElement);
     }
-  }
-
-  capitalize(str) {
-    const lower = str.toLowerCase();
-
-    if (this.fullCapsNations.includes(lower)) {
-      return lower.toUpperCase();
-    }
-
-    return str.charAt(0).toUpperCase() + str.slice(1);
   }
 }
