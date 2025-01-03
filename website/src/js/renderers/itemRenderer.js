@@ -81,7 +81,12 @@ export class ItemRenderer {
     const discount = document.createElement('p');
     discount.classList.add('item__discount');
 
-    if (!this.data.buyable && (this.data.defaultPrice || this.data.oldPrice)) {
+    if (!this.data.buyable && this.data.isDiscounted) {
+      this.priceElement.textContent = `€${this.data.newPrice.toFixed(2)}`;
+      discount.textContent = 'Last known price';
+      itemDiv.dataset.price = this.data.newPrice.toFixed(2);
+      itemDiv.dataset.discount = this.data.discountPercent.toFixed(2);
+    } else if (!this.data.buyable && this.data.defaultPrice) {
       const price = this.data.defaultPrice || this.data.oldPrice;
       this.priceElement.textContent = `€${price.toFixed(2)}`;
       this.priceElement.classList.add('normal');
