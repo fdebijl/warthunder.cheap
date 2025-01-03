@@ -1,6 +1,6 @@
 # Warthunder.cheap Scraper
 
-The scraper for Warthunder.cheap, designed to run on a schedule to keep the database up to date.
+The scraper for Warthunder.cheap, designed to run on a schedule to keep the database up to date with the War Thunder store.
 
 Flags:
 ```bash

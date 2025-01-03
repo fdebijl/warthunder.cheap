@@ -1,6 +1,7 @@
 @import url('./itemgrid.css');
 @import url('./details.css');
 @import url('./alerts.css');
+@import url('./nav.css');
 
 /* Floating Action Button */
 .fab {

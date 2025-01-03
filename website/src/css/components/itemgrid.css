@@ -8,6 +8,24 @@
 
 .itemcategory {
   margin-top: 1rem;
+  display: none;
+}
+
+.itemcategory:has(.item:not(.hidden)) {
+  display: block;
+}
+
+main:has(.item:not(.hidden)) .no-results {
+  display: none;
+}
+
+.no-results {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  margin: 3rem 0;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .itemgrid {

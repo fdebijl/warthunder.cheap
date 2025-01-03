@@ -1,5 +1,6 @@
 import { ChartRenderer } from './chartRenderer.js';
 import { isAuthenticated } from '../util/authenticate.js';
+import { capitalize } from '../util/capitalize.js';
 import { API_URL } from '../env.js';
 
 /** The DetailsRenderer handles populating the modal that shows when clicking 'View details' on an item card */
@@ -10,7 +11,6 @@ export class DetailsRenderer extends EventTarget {
     super();
 
     this.referalRenderer = referalRenderer;
-    this.fullCapsNations = ['usa', 'ussr'];
   }
 
   get emailAddress() {
@@ -249,7 +249,7 @@ export class DetailsRenderer extends EventTarget {
       if (data.nation) {
         const countrySpan = document.createElement('span');
         countrySpan.classList.add('details__meta-country');
-        countrySpan.textContent = this.capitalize(data.nation);
+        countrySpan.textContent = capitalize(data.nation);
         meta.appendChild(countrySpan);
       }
 
@@ -277,7 +277,7 @@ export class DetailsRenderer extends EventTarget {
     const scrapeInfo = document.createElement('p');
     scrapeInfo.classList.add('details__scrape-info', 'muted', 'margin-top-sm');
     scrapeInfo.innerHTML = `ID: ${data.id}<br>`;
-    scrapeInfo.innerHTML += `Source: ${this.capitalize(data.source || 'live')}<br>`;
+    scrapeInfo.innerHTML += `Source: ${capitalize(data.source || 'live')}<br>`;
     if (!data.buyable) scrapeInfo.innerHTML += `Store link: <a href="${data.href}" target="_blank">${data.href}</a><br>`;
     scrapeInfo.innerHTML += `First available: ${new Date(data.firstAvailableAt ?? data.createdAt).toDateString()}<br>`;
     if (!data.buyable && data.lastAvailableAt) scrapeInfo.innerHTML += `Last available: ${new Date(data.lastAvailableAt).toDateString()}<br>`;
@@ -372,15 +372,5 @@ export class DetailsRenderer extends EventTarget {
 
     const chartRenderer = new ChartRenderer(priceData);
     chartRenderer.renderInto('.details__chart');
-  }
-
-  capitalize(str) {
-    const lower = str.toLowerCase();
-
-    if (this.fullCapsNations.includes(lower)) {
-      return lower.toUpperCase();
-    }
-
-    return str.charAt(0).toUpperCase() + str.slice(1);
   }
 }

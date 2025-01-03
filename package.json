@@ -3,6 +3,7 @@
   "workspaces": [
     "shared",
     "api",
-    "scraper"
+    "scraper",
+    "website"
   ]
 }
