@@ -1,6 +1,7 @@
 import { capitalize } from '../util/capitalize.js';
 import { romanToNumericalRank } from '../util/romanToNumericalRank.js';
 
+// TODO: Wire up sorting
 export class NavRenderer {
   items;
   ranks;
@@ -8,7 +9,40 @@ export class NavRenderer {
   categories;
   types;
 
+  /**
+   * Set the active filters for the itemgrid. Filters are objects with a type and a value, items will be shown if the dataset[type] matches the value.
+   *
+   * @sample
+   * [
+   *   {
+   *     "type": "nation",
+   *     "value": "britain"
+   *   },
+   *   {
+   *     "type": "category",
+   *     "value": "WarThunderPacks"
+   *   },
+   *   {
+   *     "type": "rank",
+   *     "value": "Rank II"
+   *   }
+   * ]
+   */
   activeFilters = [];
+
+  /**
+   * Set the sorting for items in the itemgrid. Key can be one of 'default', 'price', 'discount', 'name', 'date', direction is either 'up' or 'down'.
+   *
+   * @sample
+   * {
+   *   key: 'price',
+   *   direction: 'down'
+   * }
+   */
+  activeSorting = {
+    key: 'default',
+    direction: 'down'
+  }
 
   constructor(items) {
     this.items = items;
@@ -20,10 +54,42 @@ export class NavRenderer {
     this.setupCategories();
     this.setupNations();
     this.setupRanks();
+
+    this.setupSorting();
   }
 
-  toggleNav() {
-    document.querySelector('nav').classList.toggle('active');
+  setupToggles() {
+    document.querySelectorAll('.nav-toggle').forEach(button => {
+      button.addEventListener('click', () => {
+        const isFilterToggle = button.classList.contains('nav-toggle__filters');
+        const targetClass = isFilterToggle ? 'filters' : 'sorting';
+
+        const nav = document.querySelector('nav');
+        const targetUl = nav.querySelectorAll(`.${targetClass}`);
+
+        const isShowing = nav.classList.contains(`show-${targetClass}`);
+
+        if (isShowing) {
+          nav.classList.remove(`show-${targetClass}`);
+          targetUl.forEach(ul => {
+            ul.style.maxHeight = '0';
+          });
+        } else {
+          nav.classList.add(`show-${targetClass}`);
+          targetUl.forEach(ul => {
+            ul.style.maxHeight = ul.scrollHeight + 'px';
+          });
+        }
+      });
+    });
+
+    document.querySelectorAll('ul.filters, ul.sorting').forEach(ul => {
+      ul.addEventListener('transitionend', () => {
+        if (ul.style.maxHeight !== '0px') {
+          ul.style.maxHeight = 'auto';
+        }
+      });
+    });
   }
 
   findRanks() {
@@ -156,6 +222,70 @@ export class NavRenderer {
 
         this.applyFilters();
       });
+    });
+  }
+
+  setupSorting() {
+    document.querySelectorAll('.sorting__item').forEach((tab) => {
+      tab.addEventListener('click', async (event) => {
+        event.preventDefault();
+
+        const isDefault = tab.dataset.sort === 'default';
+        const isActive = tab.classList.contains('active');
+        const direction = tab.classList.contains('sorting__down') ? 'down' : 'up';
+
+        if (isActive && !isDefault) {
+          tab.classList.toggle('sorting__down');
+          tab.classList.toggle('sorting__up');
+          this.activeSorting.direction = direction === 'down' ? 'up' : 'down';
+        }
+
+        document.querySelector('.sorting .navtab.active').classList.remove('active');
+        tab.classList.add('active');
+
+        this.activeSorting.key = tab.dataset.sort;
+        this.applySorting();
+      });
+    });
+  }
+
+  applySorting() {
+    const items = [...document.querySelectorAll('.item')].sort((a, b) => {
+      if (this.activeSorting.key === 'default') {
+        return 0;
+      }
+
+      const aKey = a.dataset[this.activeSorting.key];
+      const bKey = b.dataset[this.activeSorting.key];
+
+      if (this.activeSorting.key === 'price') {
+        return parseFloat(aKey) - parseFloat(bKey);
+      }
+
+      if (this.activeSorting.key === 'discount') {
+        return parseFloat(aKey) - parseFloat(bKey);
+      }
+
+      if (this.activeSorting.key === 'title') {
+        return aKey.localeCompare(bKey);
+      }
+
+      if (this.activeSorting.key === 'date') {
+        return new Date(aKey) - new Date(bKey);
+      }
+    })
+
+    if (this.activeSorting.direction === 'up') {
+      items.reverse();
+    }
+
+    items.forEach((item, index) => {
+      if (this.activeSorting.key === 'default') {
+        item.style.order = 0;
+        return;
+      }
+
+      item.style.order = index;
     });
   }
 

@@ -71,6 +71,7 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
     }
 
     clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
+    // TODO: Should we upsert if the item already exists?
     await upsertItem(deepCheckedItem);
 
     if (isImagingRun) {
@@ -113,6 +114,7 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
     }
 
     // We already upsert here so that the item is in the DB, even if there are no memento's for the details page
+    // TODO: Should we upsert if the item already exists?
     await upsertItem(item);
 
     if (isImagingRun) {

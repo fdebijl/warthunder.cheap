@@ -1,20 +1,15 @@
 Todo:
 - Website
+  - Compatibility with screen readers/a11y in general
   - Search
-  - Filtering
-    - Nation
-    - Rank
-    - Type (i.e. plane, vehicle, helicopter, or vessel, we don't collect this rn)
-  - Sorting
-    - Price
-    - Date
-  - SEO
-  - Hide alert button if user already has an alert for this item
-  - analytics.floris.amsterdam hookup?
+  - Scrape vehicle type and add filtering by it
+  - SEO?
+  - Hide alert button if user already has an alert for this item?
+  - Matomo integration?
 - API
   - Rate limiting
 - Devops/other
-  - Add readmes
+  - Finish readmes
   - Add other markdown files such as security/contributing for github purposes
 - Scraper
   - Improve timings/reduce timeout duration for wayback scrapes

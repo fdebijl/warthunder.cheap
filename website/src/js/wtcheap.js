@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadHeader();
 
   const navRenderer = new NavRenderer(allItems);
-  document.querySelector('.nav__toggle').addEventListener('click', navRenderer.toggleNav);
+  navRenderer.setupToggles();
 
   document.querySelectorAll('.fadeloading').forEach((element) => {
     element.classList.remove('fadeloading');

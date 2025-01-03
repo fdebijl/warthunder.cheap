@@ -50,20 +50,32 @@
   </header>
 
   <nav>
-    <ul class="filter__categories">
+    <ul class="filters filter__categories">
       <li class="filter__header">Categories</li>
       <!-- Categories get injected here -->
     </ul>
-    <ul class="filter__nations">
+    <ul class="filters filter__nations">
       <li class="filter__header">Nations</li>
       <!-- Nations get injected here -->
     </ul>
-    <ul class="filter__ranks">
+    <ul class="filters filter__ranks">
       <li class="filter__header">Ranks</li>
       <!-- Ranks get injected here -->
+    </ul>
+    <ul class="sorting">
+      <li class="sorting__header">Sort by</li>
+      <li><a class="navtab sorting__item active" data-sort="default">Default</a></li>
+      <li><a class="navtab sorting__item sorting__down" data-sort="price">Price</a></li>
+      <li><a class="navtab sorting__item sorting__down" data-sort="discount">Discount</a></li>
+      <li><a class="navtab sorting__item sorting__down" data-sort="title">Title</a></li>
+      <li><a class="navtab sorting__item sorting__down" data-sort="date">Date</a></li>
+    </ul>
   </nav>
 
-  <button class="nav__toggle fab compact">Toggle filters</button>
+  <div class="row">
+    <button class="nav-toggle nav-toggle__filters fab compact">Toggle filters</button>
+    <button class="nav-toggle nav-toggle__sorting fab compact">Toggle sorting</button>
+  </div>
 
   <main>
     <div class="no-results">No results match your filters</div>

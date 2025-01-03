@@ -23,6 +23,8 @@ export class ItemRenderer {
     itemDiv.dataset.nation = this.data.nation;
     itemDiv.dataset.rank = this.data.rank;
     itemDiv.dataset.rankNo = romanToNumericalRank(this.data.rank);
+    itemDiv.dataset.title = this.data.title;
+    itemDiv.dataset.date = this.data.firstAvailableAt ?? this.data.createdAt;
 
     const posterName = this.data.poster.split('/').pop();
     const fallbackSrc = `media/${this.data.id}/${posterName}`;
@@ -96,6 +98,7 @@ export class ItemRenderer {
       discount.textContent = `Discounted by ${this.data.discountPercent.toFixed(2) || 0}%, normally €${this.data.oldPrice.toFixed(2)}`;
       discount.classList.add('discounted');
       itemDiv.dataset.price = this.data.newPrice.toFixed(2);
+      itemDiv.dataset.discount = this.data.discountPercent.toFixed(2);
     } else {
       this.priceElement.textContent = `€${this.data.defaultPrice.toFixed(2)}`;
       this.priceElement.classList.add('normal');
