@@ -6,8 +6,9 @@ import { SHOP_2022_SELECTORS, SHOP_2021_SELECTORS, SHOP_2016_SELECTORS } from '.
 
 const MATCH_TIMEOUT = 30_000;
 
-// TODO: Doesn't work on ultra bundle? i.e. 2016 shop
-// TODO: Document this
+/**
+ * Find the appropriate selector set for the given page. Returns a promise that resolves with the selector set.
+ */
 export const matchSelectors = (page: Page): Promise<SelectorSet> => {
   return Promise.race([
     milliseconds(MATCH_TIMEOUT - 10).then(() => { throw new Error('Could not ascertain selector set') }),

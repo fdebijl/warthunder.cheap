@@ -4,7 +4,9 @@ import { LOGLEVEL } from '@fdebijl/clog';
 import { getArchiveSnapshots } from './getArchiveSnapshots.js';
 import { clog } from '../index.js';
 
-export const findBestMemento = async (url: string, browser: Browser): Promise<{ url: string; datetime: Date; } | null> => {
+type Root = { url: string; datetime: Date; };
+
+export const findBestMemento = async ({ url, browser, targetDate }: { url: string, browser: Browser, targetDate?: Date }): Promise<Root | null> => {
   const mementos = await getArchiveSnapshots(url);
 
   if (mementos['memento'] === undefined) {
@@ -12,6 +14,7 @@ export const findBestMemento = async (url: string, browser: Browser): Promise<{ 
     return null;
   }
 
+  // TODO: Process mementos in sequence to avoid getting ratelimited
   const results = await Promise.all(
     mementos['memento'].map(async (memento) => {
       const page = await browser.newPage();
@@ -45,5 +48,14 @@ export const findBestMemento = async (url: string, browser: Browser): Promise<{ 
 
   clog.log(`Found ${results.filter((result) => result !== null).length} usable mementos out of ${mementos['memento'].length} total mementos for ${url}`, LOGLEVEL.DEBUG);
 
-  return results.find((result) => result !== null) || null;
+  const nonNullResults = results.filter((result) => result !== null);
+  const closestResult = nonNullResults.reduce((closest: null | Root, current: Root) => {
+    if (!closest) {
+      return current;
+    }
+
+    return Math.abs(targetDate ? targetDate.getTime() - current.datetime.getTime() : 0) < Math.abs(targetDate ? targetDate.getTime() - closest.datetime.getTime() : 0) ? current : closest;
+  }, null);
+
+  return closestResult;
 };

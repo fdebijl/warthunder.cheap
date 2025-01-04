@@ -1,7 +1,6 @@
 import { capitalize } from '../util/capitalize.js';
 import { romanToNumericalRank } from '../util/romanToNumericalRank.js';
 
-// TODO: Wire up sorting
 export class NavRenderer {
   items;
   ranks;

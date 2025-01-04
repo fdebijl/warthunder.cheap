@@ -83,7 +83,7 @@ export class ItemRenderer {
 
     if (!this.data.buyable && this.data.isDiscounted) {
       this.priceElement.textContent = `€${this.data.newPrice.toFixed(2)}`;
-      discount.textContent = 'Last known price';
+      discount.textContent = 'Last known price (discounted)';
       itemDiv.dataset.price = this.data.newPrice.toFixed(2);
       itemDiv.dataset.discount = this.data.discountPercent.toFixed(2);
     } else if (!this.data.buyable && this.data.defaultPrice) {

@@ -153,7 +153,7 @@ export class DetailsRenderer extends EventTarget {
 
     const availability = document.createElement('p');
     availability.classList.add('details__availability');
-    availability.textContent = data.buyable ? 'Available' : 'Not available, sign up for an alert below to get an email when it\'s back in stock';
+    availability.textContent = data.buyable ? 'Available' : 'Not available right now, sign up for an alert below to get an email when it\'s back in the store';
     infoLeft.appendChild(availability);
 
     if (data.buyable) {
