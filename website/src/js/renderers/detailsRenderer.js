@@ -104,7 +104,7 @@ export class DetailsRenderer extends EventTarget {
     const pricing = document.createElement('span');
     pricing.classList.add('details__pricing');
 
-    if (data.isDiscounted && data.buyable) {
+    if (data.isDiscounted) {
       const oldPrice = document.createElement('p');
       oldPrice.classList.add('details__price', 'details__price-old');
 
@@ -118,6 +118,11 @@ export class DetailsRenderer extends EventTarget {
       newPrice.textContent = `€${newPriceValue.toFixed(2)}`;
       pricing.appendChild(oldPrice);
       pricing.appendChild(newPrice);
+    } else if (!data.oldPrice && !data.newPrice && !data.defaultPrice) {
+      const price = document.createElement('p');
+      price.classList.add('details__price');
+      price.textContent = 'Unknown';
+      pricing.appendChild(price);
     } else {
       const price = document.createElement('p');
       price.classList.add('details__price');
@@ -136,9 +141,14 @@ export class DetailsRenderer extends EventTarget {
 
     const discount = document.createElement('p');
     discount.classList.add('details__discount', 'muted');
-    discount.textContent = data.isDiscounted && data.buyable
+    if (!data.oldPrice && !data.newPrice && !data.defaultPrice) {
+      discount.textContent = 'No pricing information available';
+    } else {
+      discount.textContent = data.isDiscounted
       ? `${data.discountPercent || 0}% discount over normal price`
       : 'Normal pricing for this item';
+    }
+
     infoLeft.appendChild(discount);
 
     const availability = document.createElement('p');
@@ -279,10 +289,26 @@ export class DetailsRenderer extends EventTarget {
     scrapeInfo.innerHTML = `ID: ${data.id}<br>`;
     scrapeInfo.innerHTML += `Source: ${capitalize(data.source || 'live')}<br>`;
     if (!data.buyable) scrapeInfo.innerHTML += `Store link: <a href="${data.href}" target="_blank">${data.href}</a><br>`;
+    if (!data.buyable && data.archivedHref) scrapeInfo.innerHTML += `Archive link: <a href="${data.archivedHref}" target="_blank">${data.archivedHref}</a><br>`;
     scrapeInfo.innerHTML += `First available: ${new Date(data.firstAvailableAt ?? data.createdAt).toDateString()}<br>`;
     if (!data.buyable && data.lastAvailableAt) scrapeInfo.innerHTML += `Last available: ${new Date(data.lastAvailableAt).toDateString()}<br>`;
     scrapeInfo.innerHTML += `First scraped: ${new Date(data.createdAt).toDateString()}<br>`;
     scrapeInfo.innerHTML += `Last scraped: ${new Date(data.updatedAt).toDateString()}`;
+    scrapeInfo.innerHTML += `<br><br>`;
+    const inspectLink = document.createElement('a');
+    inspectLink.href = '#';
+    inspectLink.textContent = 'Inspect';
+    inspectLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log(data);
+
+      inspectLink.textContent = 'Check the console';
+
+      setTimeout(() => {
+        inspectLink.textContent = 'Inspect';
+      }, 10_000);
+    });
+    scrapeInfo.appendChild(inspectLink);
     infoRight.appendChild(scrapeInfo);
 
     infoContainer.appendChild(infoRight);

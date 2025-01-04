@@ -8,12 +8,15 @@ import { clog } from './index.js';
 import { getArchiveSnapshots } from './scrapers/getArchiveSnapshots.js';
 import { LAUNCH_HEADLESS, SHOP_2016_SELECTORS, SHOP_2021_SELECTORS, SHOP_2022_SELECTORS } from './constants.js';
 import { containsNonLatinCharacters, enqueueStoreMedia } from './util/index.js';
+import { seconds } from '@fdebijl/pog';
 
 const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
 const isImagingRun = process.argv.includes('--imaging');
+const isReverseRun = process.argv.includes('--reverse');
 
 const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> => {
   const liveLink = `${item.href}`;
+  // TODO: Best memento should be the one closest to root datetime
   const safeUrl = await findBestMemento(item.href, page.browser());
 
   if (!safeUrl) {
@@ -22,6 +25,7 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
   }
 
   item.href = safeUrl.url;
+  item.archivedHref = safeUrl.url;
   item.source = 'archive';
 
   try {
@@ -65,13 +69,19 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
     }
 
     const descriptionLang = franc(deepCheckedItem.details?.description);
-    if (descriptionLang !== 'eng') {
+    const hasDescription = !!deepCheckedItem.details?.description;
+    if (hasDescription && descriptionLang !== 'eng') {
       clog.log(`Item ${item.id} "${item.title}" has a non-english description (${descriptionLang}), skipping`, LOGLEVEL.DEBUG);
       return null;
     }
 
     clog.log(`Upserting item ${deepCheckedItem.id} "${deepCheckedItem.title}" (Currently available?: ${deepCheckedItem.buyable})`, LOGLEVEL.DEBUG);
-    // TODO: Should we upsert if the item already exists?
+    const exists = await findItem(item.id);
+    if (exists) {
+      delete item.source;
+      delete item.buyable;
+    }
+
     await upsertItem(deepCheckedItem);
 
     if (isImagingRun) {
@@ -113,8 +123,12 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
       item.firstAvailableAt = root.datetime;
     }
 
+    if (existingItem) {
+      delete item.source;
+      delete item.buyable;
+    }
+
     // We already upsert here so that the item is in the DB, even if there are no memento's for the details page
-    // TODO: Should we upsert if the item already exists?
     await upsertItem(item);
 
     if (isImagingRun) {
@@ -167,14 +181,21 @@ export const waybackMain = async () => {
   const memento = await getArchiveSnapshots('https://store.gaijin.net/catalog.php?category=WarThunderPacks');
   const roots = memento.memento.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
 
+  if (isReverseRun) {
+    roots.reverse();
+  }
+
   clog.log(`Found ${roots.length} mementos`);
 
   let index = 1;
-  const seenItems = [];
+  const seenItems: Item[] = [];
 
   for (const root of roots) {
     clog.log(`Processing memento ${index}/${roots.length}`);
-    const usableItemsInRoot = await scrapeRoot(root, seenItems);
+    const usableItemsInRoot = await scrapeRoot(root, seenItems).catch(() => {
+      clog.log(`Error scraping root ${root.url} (${root.datetime.toISOString()}, backing off)`, LOGLEVEL.ERROR);
+      return seconds(120).then(() => []);
+    });
     seenItems.push(...usableItemsInRoot);
     index++;
   }

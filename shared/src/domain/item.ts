@@ -7,10 +7,12 @@ export interface Item {
   href: string;
   /** The final href for this item, after the ID-based redirects are followed */
   resolvedHref?: string;
+  /** URL to the archived page, if scraped from archive */
+  archivedHref?: string;
   /** Whether the item is from the live store or an archive (e.g. Archive.org or archive.today) */
   source?: 'live' | 'archive';
   /** Whether the item is currently purchaseable */
-  buyable: boolean;
+  buyable?: boolean;
   /** URL to the item's poster image */
   poster?: string | null;
   /** Name of the pack/item */

@@ -45,7 +45,13 @@ app.get(`/${PATH_PREFIX}/${API_VERSION}/prices/:itemId`, async (req, res) => {
   }
 
   const priceData = await getPricesForItem(req.params.itemId);
-  res.json(priceData);
+
+  if (!priceData.length) {
+    res.status(404).send(JSON.stringify({ message: 'No prices found for item' }));
+    return;
+  }
+
+  res.status(200).json(priceData);
 });
 
 app.post(`/${PATH_PREFIX}/${API_VERSION}/alerts`, async (req, res) => {

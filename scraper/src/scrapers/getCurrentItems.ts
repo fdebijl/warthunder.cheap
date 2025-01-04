@@ -28,8 +28,12 @@ export const getCurrentItems = async (
       await milliseconds(2000);
     }
 
-    const category = (new URLSearchParams(targetRoot.split('?')[1]).get('category') || 'Other') as Item['category'];
+    let category = (new URLSearchParams(targetRoot.split('?')[1]).get('category') || 'Other') as Item['category'];
     const selectors = await matchSelectors(page);
+
+    if ((category as string) === 'warthunderpacks') {
+      category = 'WarThunderPacks';
+    }
 
     let loopCount = 0;
     const maxLoops = 50;

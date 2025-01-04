@@ -5,7 +5,9 @@ The scraper for Warthunder.cheap, designed to run on a schedule to keep the data
 Flags:
 ```bash
   --wayback
-        Scrape from wayback machine instead of the live store
+        Scrape from wayback machine instead of the live store. Implies --pricing.
+  --reverse
+        [Only for --wayback] Scrape in reverse chronological order
   --pricing
         Store pricing information for each scraped item
   --imaging

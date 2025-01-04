@@ -5,7 +5,7 @@ import { queryPrices } from './query.js';
 export const insertPrice = async (price: Price): Promise<void> => {
   const db = await connect();
 
-  const countForDate = await queryPrices({ date: price.date });
+  const countForDate = await queryPrices({ itemId: price.itemId, date: price.date });
 
   if (countForDate.length > 0) {
     return;
