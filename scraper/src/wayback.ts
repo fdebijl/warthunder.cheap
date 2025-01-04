@@ -14,10 +14,14 @@ const WAYBACK_MACHINE_PAGE_TIMEOUT = 60_000;
 const isImagingRun = process.argv.includes('--imaging');
 const isReverseRun = process.argv.includes('--reverse');
 
-const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> => {
+type Root = {
+  url: string;
+  datetime: Date;
+}
+
+const processUnseenItem = async (item: Item, page: Page, root: Root): Promise<Item | null> => {
   const liveLink = `${item.href}`;
-  // TODO: Best memento should be the one closest to root datetime
-  const safeUrl = await findBestMemento(item.href, page.browser());
+  const safeUrl = await findBestMemento({ url: item.href, browser: page.browser(), targetDate: root.datetime });
 
   if (!safeUrl) {
     clog.log(`Item ${item.id} "${item.title}" is a 404 on every snapshot, skipping`, LOGLEVEL.DEBUG);
@@ -99,7 +103,7 @@ const processUnseenItem = async (item: Item, page: Page): Promise<Item | null> =
   }
 };
 
-const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item[]): Promise<Item[]> => {
+const scrapeRoot = async (root: Root, seenItems: Item[]): Promise<Item[]> => {
   clog.log(`Scraping root ${root.url} (${root.datetime.toISOString()})`, LOGLEVEL.DEBUG);
 
   const items = await getCurrentItems({ targetRoots: [root.url], slowMode: true, ignoreDiscounts: false, skipDeepCheck: true });
@@ -159,7 +163,7 @@ const scrapeRoot = async (root: { url: string, datetime: Date }, seenItems: Item
     try {
       clog.log(`Processing item ${item.id} "${item.title}"`, LOGLEVEL.DEBUG);
 
-      const processedItem = await processUnseenItem(item, page);
+      const processedItem = await processUnseenItem(item, page, root);
 
       if (processedItem) {
         usableItems.push(processedItem);

@@ -14,5 +14,4 @@ Todo:
 - Scraper
   - Improve timings/reduce timeout duration for wayback scrapes
   - Save all-404/no-memento items and skip those
-  - Bundles always have `undetermined` description language, even if it's actually English
   - Address archive.org rate limiting
