@@ -8,9 +8,9 @@
     "lint": "eslint \"./src/**/*.js\" --max-warnings 10"
   },
   "devDependencies": {
-    "@eslint/js": "9.17.0",
+    "@eslint/js": "9.20.0",
     "eslint": "9.17.0",
-    "globals": "15.14.0"
+    "globals": "15.15.0"
   },
   "engines": {
     "node": "~ 22",
