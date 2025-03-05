@@ -15,9 +15,9 @@
     "@fdebijl/pog": "1.55.0",
     "dotenv": "16.4.7",
     "franc": "6.2.0",
-    "mailgun.js": "10.2.4",
-    "mongodb": "6.12.0",
-    "puppeteer": "23.10.4",
+    "mailgun.js": "10.4.0",
+    "mongodb": "6.13.0",
+    "puppeteer": "23.11.1",
     "wtcheap.shared": "^1.0.0"
   },
   "devDependencies": {
