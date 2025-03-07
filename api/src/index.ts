@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import { Clog, LOGLEVEL } from '@fdebijl/clog';
@@ -21,6 +22,7 @@ import { authenticateToken } from './util/authenticateToken.js';
 const clog = new Clog();
 
 const app = express();
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 
