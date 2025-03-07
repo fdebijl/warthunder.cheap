@@ -22,6 +22,7 @@ COPY --from=builder /usr/src/app/scraper/dist ./
 COPY --from=base /usr/src/app/node_modules /usr/src/app/node_modules
 COPY --from=base /usr/src/app/shared /usr/src/app/shared
 RUN npm install --omit=dev
+RUN npx puppeteer browsers install chrome
 
 RUN mkdir -p /etc/cron.d
 COPY scraper/scraper-cron /etc/cron.d/scraper-cron

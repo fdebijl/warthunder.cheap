@@ -1,4 +1,5 @@
 import { Clog, LOGLEVEL } from '@fdebijl/clog';
+import { milliseconds } from '@fdebijl/pog';
 import { Price, listItems, insertPrice, upsertItem, } from 'wtcheap.shared';
 
 import { getCurrentItems, deepCheckItem } from './scrapers/index.js';
@@ -7,7 +8,6 @@ import { HEARTBEAT_URL, SHOP_2022_SELECTORS, TARGET_ROOTS } from './constants.js
 import { waybackMain } from './wayback.js';
 import { ensureIndices } from './db/ensureIndices.js';
 import { storeMedia } from './util/storeMedia.js';
-import { milliseconds } from '@fdebijl/pog';
 
 export const clog = new Clog(LOGLEVEL.DEBUG);
 
