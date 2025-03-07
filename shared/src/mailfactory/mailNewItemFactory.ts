@@ -16,12 +16,12 @@ export class MailNewItemFactory implements MailFactory {
   }
 
   async generate(): Promise<MailFactory> {
-    this.mail.subject = `${this.items.length} new items are now available in the War Thunder store`;
+    this.mail.subject = `${this.items.length} new ${this.items.length > 1 ? 'items are' : 'item is'} now available in the War Thunder store`;
 
     this.mail.html = generateHeader('html');
     this.mail.html +=
     '<p>' +
-      `The following ${this.items.length > 1 ? 'items' : 'item'} are now available in the War Thunder store:\n` +
+      `The following ${this.items.length > 1 ? 'items are' : 'item is'} now available in the War Thunder store:\n` +
       '<ul>' +
         this.items.map((item) => `<li><a href="${item.resolvedHref}" target="_blank" rel="noopener">${item.title}</a></li>`).join('\n') +
       '</ul>'
@@ -29,7 +29,7 @@ export class MailNewItemFactory implements MailFactory {
     this.mail.html += generateFooter({ eventType: 'newItem', format: 'html' });
 
     this.mail.text = generateHeader('text');
-    this.mail.text += `The following ${this.items.length > 1 ? 'items' : 'item'} are now available in the War Thunder store:\n` +
+    this.mail.text += `The following ${this.items.length > 1 ? 'items are' : 'item is'} now available in the War Thunder store:\n` +
     this.items.map((item) => ` - ${item.title} (${item.resolvedHref})`).join('\n');
     this.mail.text += generateFooter({ eventType: 'newItem', format: 'text' });
 
