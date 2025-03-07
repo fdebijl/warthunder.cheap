@@ -7,6 +7,9 @@ import { API_URL } from '../env.js';
 export class DetailsRenderer extends EventTarget {
   item;
 
+  _docTitle;
+  _docMeta;
+
   constructor(referalRenderer) {
     super();
 
@@ -23,6 +26,20 @@ export class DetailsRenderer extends EventTarget {
 
   get isAuthenticated() {
     return isAuthenticated();
+  }
+
+  updateDocInfo(data) {
+    this._docTitle = window.document.title;
+    this._docMeta = document.querySelector('meta[name="description"]').getAttribute('content');
+
+    window.document.title = `Warthunder.cheap | ${data.title} price tracker`;
+    const desc = `Get an email alert when the price of the ${data.title} changes on the War Thunder store and view historical pricing data.`;
+    document.querySelector('meta[name="description"]').setAttribute('content', desc);
+  }
+
+  rollbackDocInfo() {
+    window.document.title = this._docTitle;
+    document.querySelector('meta[name="description"]').setAttribute('content', this._docMeta);
   }
 
   updateDetailsElement(data) {
@@ -365,8 +382,10 @@ export class DetailsRenderer extends EventTarget {
 
     if (modal) {
       this.updateDetailsElement(data);
+      this.updateDocInfo(data);
 
       const closeModalHandler = () => {
+        this.rollbackDocInfo();
         this.dispatchEvent(new Event('item_dismissed'));
 
         modal.removeEventListener('click', clickOutsideToClose)
@@ -381,6 +400,11 @@ export class DetailsRenderer extends EventTarget {
 
       modal.showModal();
       modal.addEventListener('click', clickOutsideToClose);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeModalHandler();
+        }
+      });
 
       this.dispatchEvent(new Event('item_selected'));
 
