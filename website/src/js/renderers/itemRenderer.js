@@ -28,7 +28,7 @@ export class ItemRenderer {
     itemDiv.dataset.date = this.data.firstAvailableAt ?? this.data.createdAt;
 
     const posterName = this.data.poster.split('/').pop();
-    const fallbackSrc = `media/${this.data.id}/${posterName}`;
+    const fallbackSrc = `/media/${this.data.id}/${posterName}`;
 
     const img = document.createElement('img');
     img.setAttribute('data-src', this.data.poster);
@@ -137,7 +137,7 @@ export class ItemRenderer {
 
     const detailsButton = document.createElement('a');
     detailsButton.classList.add('item__details', 'button', 'secondary');
-    detailsButton.textContent = 'View Details';
+    detailsButton.textContent = 'View Details & Alerts';
     detailsButton.href = `/item/${this.data.id}`;
     detailsButton.addEventListener('click', (event) => {
       event.preventDefault();
