@@ -3,6 +3,7 @@ Todo:
   - Compatibility with screen readers/a11y in general
   - Search
   - Scrape vehicle type and add filtering by it
+  - The 'Last known price (discounted)' tag is not muted (it should be)
   - SEO?
   - Hide alert button if user already has an alert for this item?
   - Matomo integration?
@@ -11,7 +12,11 @@ Todo:
 - Devops/other
   - Finish readmes
   - Add other markdown files such as security/contributing for github purposes
+  - Add tests
 - Scraper
   - Improve timings/reduce timeout duration for wayback scrapes
   - Save all-404/no-memento items and skip those
-  - Address archive.org rate limiting
+  - Address archive.org rate limiting, particularly on --imaging runs
+  - Add --skip=### option to skip N memento roots
+  - Block scraping of non EUR/USD currencies
+  - Remove CAD price scrapes from the DB
