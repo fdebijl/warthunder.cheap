@@ -5,7 +5,7 @@ import { Mail } from './domain/index.js';
 
 import { MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_SENDER } from './constants.js';
 
-const mailgun = new Mailgun.default(formData);
+const mailgun = new Mailgun(formData);
 const mailgunClient = mailgun.client({
   url: 'https://api.eu.mailgun.net',
   username: 'api',
