@@ -389,22 +389,19 @@ export class DetailsRenderer extends EventTarget {
         this.dispatchEvent(new Event('item_dismissed'));
 
         modal.removeEventListener('click', clickOutsideToClose)
+        document.removeEventListener('keydown', clickOutsideToClose);
         modal.close();
       }
 
       const clickOutsideToClose = (e) => {
-        if (e.target.id === dialogId) {
+        if (e.target.id === dialogId || e.key === 'Escape') {
           closeModalHandler();
         }
       }
 
       modal.showModal();
       modal.addEventListener('click', clickOutsideToClose);
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          closeModalHandler();
-        }
-      });
+      document.addEventListener('keydown', clickOutsideToClose);
 
       this.dispatchEvent(new Event('item_selected'));
 
