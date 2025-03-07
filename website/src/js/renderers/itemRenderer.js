@@ -5,6 +5,7 @@ import { romanToNumericalRank } from '../util/romanToNumericalRank.js';
 export class ItemRenderer {
   id;
   priceElement;
+  storeButton;
 
   constructor(data, referalRenderer, detailsRenderer) {
     this.data = data;
@@ -119,30 +120,31 @@ export class ItemRenderer {
 
     const actionDiv = document.createElement('div');
     actionDiv.classList.add('item__actions');
-    const storeButton = document.createElement('button');
-    storeButton.classList.add('item__store', 'button', 'primary');
-    storeButton.textContent = 'Buy';
 
-    storeButton.addEventListener('click', () => {
-      if (this.referalRenderer) {
-        const referal = this.referalRenderer.referalQueryParams;
-        if (referal) {
-          return window.open(this.data.href + referal, '_blank');
-        }
+    this.storeButton = document.createElement('a');
+    this.storeButton.classList.add('item__store', 'button', 'primary');
+    this.storeButton.textContent = 'Buy';
+    this.storeButton.target = '_blank';
+    this.storeButton.href = this.data.href;
+
+    if (this.referalRenderer) {
+      const referal = this.referalRenderer.referalQueryParams;
+
+      if (referal) {
+        this.storeButton.href = this.data.href + referal;
       }
+    }
 
-      window.open(this.data.href, '_blank');
-    });
-
-    const detailsButton = document.createElement('button');
+    const detailsButton = document.createElement('a');
     detailsButton.classList.add('item__details', 'button', 'secondary');
     detailsButton.textContent = 'View Details';
-
-    detailsButton.addEventListener('click', () => {
+    detailsButton.href = `?item=${this.data.id}`;
+    detailsButton.addEventListener('click', (event) => {
+      event.preventDefault();
       this.detailsRenderer.show(this.data);
     });
 
-    if (this.data.buyable) actionDiv.appendChild(storeButton);
+    if (this.data.buyable) actionDiv.appendChild(this.storeButton);
     actionDiv.appendChild(detailsButton);
 
     itemDiv.appendChild(actionDiv);
@@ -152,6 +154,12 @@ export class ItemRenderer {
 
   bindPartnerChange() {
     this.referalRenderer.addEventListener('partner_changed', () => {
+      const referal = this.referalRenderer.referalQueryParams;
+
+      if (referal) {
+        this.storeButton.href = this.data.href + referal;
+      }
+
       if (this.data.category === 'GoldenEagles' || !this.data.buyable || this.data.isDiscounted) {
         return;
       }

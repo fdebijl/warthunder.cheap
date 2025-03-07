@@ -60,6 +60,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const navRenderer = new NavRenderer(allItems);
   navRenderer.setupToggles();
 
+  document.querySelectorAll('.fadeloading-only').forEach((element) => {
+    element.classList.remove('fadeloading-only');
+    element.classList.add('hidden');
+  });
+
   document.querySelectorAll('.fadeloading').forEach((element) => {
     element.classList.remove('fadeloading');
     element.classList.add('fadeloaded');
@@ -75,5 +80,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     archivedItems
   };
 
-  console.log('Evaluate `window.wtCheap` to debug/inspect the renderers');
+  console.info('Evaluate `window.wtCheap` to debug/inspect the renderers');
 });
