@@ -12,10 +12,11 @@ export class ParamManager {
 
   initParams() {
     const urlParams = new URLSearchParams(window.location.search);
+    const path = window.location.pathname;
 
     this.params = {
       partner: urlParams.get('partner'),
-      item: urlParams.get('item')
+      item: path.match(/item\/(?<id>[0-9]*)/)?.groups?.id,
     };
 
     if (this.params.partner) {
@@ -60,9 +61,9 @@ export class ParamManager {
     }
 
     if (this.params.item) {
-      url.searchParams.set('item', this.params.item);
+      url.pathname = `/item/${this.params.item}`;
     } else {
-      url.searchParams.delete('item');
+      url.pathname = '/';
     }
 
     window.history.pushState({}, '', url);

@@ -138,7 +138,7 @@ export class ItemRenderer {
     const detailsButton = document.createElement('a');
     detailsButton.classList.add('item__details', 'button', 'secondary');
     detailsButton.textContent = 'View Details';
-    detailsButton.href = `?item=${this.data.id}`;
+    detailsButton.href = `/item/${this.data.id}`;
     detailsButton.addEventListener('click', (event) => {
       event.preventDefault();
       this.detailsRenderer.show(this.data);
