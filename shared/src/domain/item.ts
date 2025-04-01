@@ -2,7 +2,7 @@ export interface Item {
   /** Unique ID pulled from the War Thunder store */
   id: number;
   /** Category of the item */
-  category: 'GoldenEagles' | 'WarThunderPacks' | 'PremiumAccount' | 'Other';
+  category: 'GoldenEagles' | 'WarThunderPacks' | 'PremiumAccount' | 'SpecOffers' | 'Other';
   /** URL to the item's page on the War Thunder store */
   href: string;
   /** The final href for this item, after the ID-based redirects are followed */

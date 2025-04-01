@@ -5,7 +5,8 @@ dotenv.config();
 export const TARGET_ROOTS = [
   'https://store.gaijin.net/catalog.php?category=GoldenEagles',
   'https://store.gaijin.net/catalog.php?category=WarThunderPacks',
-  'https://store.gaijin.net/catalog.php?category=PremiumAccount'
+  'https://store.gaijin.net/catalog.php?category=PremiumAccount',
+  'https://store.gaijin.net/catalog.php?category=SpecOffers'
 ];
 
 // Some items always have a discount banner, which are not interesting and should be excluded from being marked as discounted
