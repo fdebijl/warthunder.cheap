@@ -54,7 +54,7 @@ jobs:
           tags: wtcheap.scraper:latest-ci
           context: .
           file: ./Dockerfile.scraper
-      - uses: supercharge/mongodb-github-action@1.11.0
+      - uses: supercharge/mongodb-github-action@1.12.0
       - name: Dry run image
         run: |
           chmod +x ./.github/dry-run.sh
