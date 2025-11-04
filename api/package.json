@@ -12,12 +12,12 @@
   },
   "dependencies": {
     "@fdebijl/clog": "1.169.0",
-    "compression": "1.8.0",
+    "compression": "1.8.1",
     "cors": "2.8.5",
-    "dotenv": "16.4.7",
+    "dotenv": "16.6.1",
     "express": "5.1.0",
     "jsonwebtoken": "9.0.2",
-    "mongodb": "6.13.0",
+    "mongodb": "6.20.0",
     "wtcheap.scraper": "*"
   },
   "devDependencies": {
