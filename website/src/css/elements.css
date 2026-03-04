@@ -60,8 +60,22 @@ header > aside p {
   color: rgba(255, 255, 255, 0.6);
 }
 
-header > aside > hr {
-  width: 100%;
+.aside__nav {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: flex-end;
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+
+.aside__nav .fab.compact {
+  gap: 0.5rem;
+}
+
+@media (max-width: 970px) {
+  .aside__nav {
+    align-items: flex-start;
+  }
 }
 
 header .bg {
