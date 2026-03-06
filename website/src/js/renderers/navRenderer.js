@@ -28,6 +28,7 @@ export class NavRenderer {
    * ]
    */
   activeFilters = [];
+  searchQuery = '';
 
   /**
    * Set the sorting for items in the itemgrid. Key can be one of 'default', 'price', 'discount', 'name', 'date', direction is either 'up' or 'down'.
@@ -55,6 +56,7 @@ export class NavRenderer {
     this.setupRanks();
 
     this.setupSorting();
+    this.setupSearch();
   }
 
   setupToggles() {
@@ -288,21 +290,26 @@ export class NavRenderer {
     });
   }
 
+  setupSearch() {
+    const input = document.querySelector('#item-search');
+    if (!input) return;
+
+    input.addEventListener('input', () => {
+      this.searchQuery = input.value.toLowerCase();
+      this.applyFilters();
+    });
+  }
+
   applyFilters() {
     document.querySelectorAll('.item').forEach((item) => {
-      if (this.activeFilters.length === 0) {
-        item.classList.remove('hidden');
-      }
-
-      const satisfiesAllFilters = this.activeFilters.every((filter) => {
-        if (filter.value === 'All') {
-          return true;
-        }
-
+      const satisfiesFilters = this.activeFilters.length === 0 || this.activeFilters.every((filter) => {
+        if (filter.value === 'All') return true;
         return item.dataset[filter.type] === filter.value;
       });
 
-      if (satisfiesAllFilters) {
+      const satisfiesSearch = !this.searchQuery || (item.dataset.title ?? '').toLowerCase().includes(this.searchQuery);
+
+      if (satisfiesFilters && satisfiesSearch) {
         item.classList.remove('hidden');
       } else {
         item.classList.add('hidden');
