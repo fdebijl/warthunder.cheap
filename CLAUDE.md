@@ -26,7 +26,7 @@ This is an npm workspaces monorepo with four packages:
 | Email | Mailgun (`mailgun.js`) |
 | Frontend | Vanilla JS, Chart.js, LazySizes |
 | Build | tsc (production), tsx (development/watch) |
-| Lint | ESLint (max 10 warnings) |
+| Lint | ESLint 10 flat config (max 10 warnings) |
 | Containers | Docker (multi-stage), Docker Compose + Traefik |
 
 ## Key Commands
@@ -106,3 +106,16 @@ HEARTBEAT_URL=           # optional monitoring webhook
 - Email templates live in `shared/src/mailfactory/`, one file per notification type
 - The scraper runs on a cron schedule in Docker; the Dockerfile sets this up via `scraper/scraper-cron`
 - Store item images are scraped to `website/src/media/` (one subdirectory per item)
+- ESLint config: each TS workspace has `eslint.config.js` importing from `@fdebijl/eslint-config` (v2+, flat config). The shared rule set lives in that package — to add workspace-specific rules, spread the imported config array and append an override object
+- `isWaybackRun && clog.log(...)` short-circuit pattern is intentional throughout the scraper; `allowShortCircuit: true` is set in `scraper/eslint.config.js` and `api/eslint.config.js`
+
+## Frontend Architecture (website/)
+
+- Entry point: [website/src/js/wtcheap.js](website/src/js/wtcheap.js) — orchestrates all renderers
+- CSS components are imported via [website/src/css/components/index.css](website/src/css/components/index.css) — add new component CSS files here
+- Renderers follow the pattern of a class with a `renderInto(selector)` or `appendTo(selector)` method
+- `NavRenderer` owns all filtering and sorting state; `applyFilters()` composes nav filters + search query
+- `StatsRenderer` uses the global `Chart` object (loaded via `<script src="/js/lib/chart.js">`) — charts must be destroyed before re-rendering (`_charts.forEach(c => c.destroy())`)
+- Partner referral images live in `website/src/img/partners/{partner_slug}.webp`
+- The custom partner dropdown uses `position:fixed` + `getBoundingClientRect()` to escape `overflow:hidden` on `<header>`
+- `[hidden]` attribute is overridden by `display:flex` — always add `[hidden] { display:none }` when using hidden on flex children
