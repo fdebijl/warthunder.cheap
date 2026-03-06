@@ -18,5 +18,4 @@ Todo:
   - Save all-404/no-memento items and skip those
   - Address archive.org rate limiting, particularly on --imaging runs
   - Add --skip=### option to skip N memento roots
-  - Block scraping of non EUR/USD currencies
   - Remove CAD price scrapes from the DB

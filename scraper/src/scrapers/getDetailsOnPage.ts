@@ -47,6 +47,10 @@ const getDetailsOnPage2022 = async (page: Page, selectors: SelectorSet): Promise
         return 0;
       }
 
+      if (!price.includes('€') && !price.includes('$')) {
+        return 0;
+      }
+
       return Number(price.replace(/[^0-9.]/g, '').trim());
     }
 
@@ -80,6 +84,10 @@ const getDetailsOnPage2016 = async (page: Page, selectors: SelectorSet): Promise
 
     const stripCurrency = (price: string): number => {
       if (!price) {
+        return 0;
+      }
+
+      if (!price.includes('€') && !price.includes('$')) {
         return 0;
       }
 

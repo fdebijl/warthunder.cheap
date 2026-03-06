@@ -33,6 +33,10 @@ const getItemsOnPage2022 = async (page: Page, selectors: SelectorSet, category: 
         return 0;
       }
 
+      if (!price.includes('€') && !price.includes('$')) {
+        return 0;
+      }
+
       return Number(price.replace(/[^0-9.]/g, '').trim());
     }
 
@@ -87,6 +91,10 @@ const getItemsOnPage2016 = async (page: Page, selectors: SelectorSet, category: 
 
     const stripCurrency = (price: string): number => {
       if (!price) {
+        return 0;
+      }
+
+      if (!price.includes('€') && !price.includes('$')) {
         return 0;
       }
 
