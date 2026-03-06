@@ -3,6 +3,7 @@ import { DetailsRenderer } from './renderers/detailsRenderer.js';
 import { ReferalRenderer } from './renderers/referalRenderer.js';
 import { AlertRenderer } from './renderers/alertRenderer.js';
 import { NavRenderer } from './renderers/navRenderer.js';
+import { StatsRenderer } from './renderers/statsRenderer.js';
 
 import { ParamManager } from './util/paramManager.js';
 import { loadModals } from './util/loadModals.js';
@@ -60,6 +61,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const navRenderer = new NavRenderer(allItems);
   navRenderer.setupToggles();
 
+  const statsRenderer = new StatsRenderer(currentItems, archivedItems);
+  statsRenderer.init();
+  document.querySelector('.dialog_open[data-dialog-id="stats"]')?.addEventListener('click', () => statsRenderer.open());
+
   document.querySelectorAll('.fadeloading-only').forEach((element) => {
     element.classList.remove('fadeloading-only');
     element.classList.add('hidden');
@@ -76,6 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     alertRenderer,
     paramManager,
     navRenderer,
+    statsRenderer,
     currentItems,
     archivedItems
   };

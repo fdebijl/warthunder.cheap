@@ -46,12 +46,12 @@ MEDIA_PATH=/path/to/warthunder.cheap/website/src/media
 
 ### Running each component
 
-**Shared library** — compile first, as api and scraper depend on it:
+**Shared library** — build first, as api and scraper depend on it:
 ```bash
-npm run compile --workspace=shared
+npm run build --workspace=shared
 ```
 
-**API** — watch mode, recompiles on save:
+**API** — watch mode, rebuilds on save:
 ```bash
 npm run start:watch --workspace=api
 # API will be available at http://localhost:3000/api/v1

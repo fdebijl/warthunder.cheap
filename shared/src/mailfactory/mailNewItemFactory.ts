@@ -24,7 +24,7 @@ export class MailNewItemFactory implements MailFactory {
       `The following ${this.items.length > 1 ? 'items are' : 'item is'} now available in the War Thunder store:\n` +
       '<ul>' +
         this.items.map((item) => `<li><a href="${item.resolvedHref}" target="_blank" rel="noopener">${item.title}</a></li>`).join('\n') +
-      '</ul>'
+      '</ul>' +
     '</p>';
     this.mail.html += generateFooter({ eventType: 'newItem', format: 'html' });
 
