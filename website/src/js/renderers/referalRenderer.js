@@ -92,8 +92,10 @@ export class ReferalRenderer extends EventTarget {
   selector;
 
   _dropdown = null;
+  _panel = null;
   _triggerImg = null;
   _triggerLabel = null;
+  _search = null;
   _list = null;
 
   constructor(selector) {
@@ -126,6 +128,15 @@ export class ReferalRenderer extends EventTarget {
     trigger.appendChild(triggerLabel);
     trigger.insertAdjacentHTML('beforeend', CHEVRON_SVG);
 
+    const panel = document.createElement('div');
+    panel.className = 'partner-dropdown__panel';
+
+    const search = document.createElement('input');
+    search.type = 'search';
+    search.className = 'partner-dropdown__search';
+    search.placeholder = 'Search...';
+    search.autocomplete = 'off';
+
     const list = document.createElement('ul');
     list.className = 'partner-dropdown__list';
     list.setAttribute('role', 'listbox');
@@ -137,6 +148,14 @@ export class ReferalRenderer extends EventTarget {
     noneItem.setAttribute('aria-selected', 'true');
     noneItem.textContent = 'None';
     list.appendChild(noneItem);
+
+    const randomItem = document.createElement('li');
+    randomItem.className = 'partner-dropdown__item';
+    randomItem.dataset.value = '__random__';
+    randomItem.setAttribute('role', 'option');
+    randomItem.setAttribute('aria-selected', 'false');
+    randomItem.textContent = 'Random';
+    list.appendChild(randomItem);
 
     this.codes.forEach((code) => {
       const item = document.createElement('li');
@@ -157,13 +176,17 @@ export class ReferalRenderer extends EventTarget {
       list.appendChild(item);
     });
 
+    panel.appendChild(search);
+    panel.appendChild(list);
     dropdown.appendChild(trigger);
-    dropdown.appendChild(list);
+    dropdown.appendChild(panel);
     mount.appendChild(dropdown);
 
     this._dropdown = dropdown;
+    this._panel = panel;
     this._triggerImg = triggerImg;
     this._triggerLabel = triggerLabel;
+    this._search = search;
     this._list = list;
 
     this.bindChange();
@@ -176,13 +199,33 @@ export class ReferalRenderer extends EventTarget {
       e.stopPropagation();
       const isOpen = this._dropdown.getAttribute('aria-expanded') === 'true';
       this._dropdown.setAttribute('aria-expanded', String(!isOpen));
+      if (!isOpen) {
+        this._positionPanel(trigger);
+        this._search.value = '';
+        this._filterList('');
+        this._search.focus();
+      }
+    });
+
+    this._search.addEventListener('input', () => {
+      this._filterList(this._search.value);
+    });
+
+    this._search.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this._dropdown.setAttribute('aria-expanded', 'false');
+      }
     });
 
     this._list.addEventListener('click', (e) => {
       const item = e.target.closest('.partner-dropdown__item');
       if (!item) return;
 
-      this.partner = this.codes.find((code) => code.partner_name === item.dataset.value) ?? null;
+      if (item.dataset.value === '__random__') {
+        this.partner = this.codes[Math.floor(Math.random() * this.codes.length)];
+      } else {
+        this.partner = this.codes.find((code) => code.partner_name === item.dataset.value) ?? null;
+      }
       this._updateTrigger();
       this._dropdown.setAttribute('aria-expanded', 'false');
       this.dispatchEvent(new Event('partner_changed'));
@@ -198,6 +241,20 @@ export class ReferalRenderer extends EventTarget {
       if (e.key === 'Escape') {
         this._dropdown.setAttribute('aria-expanded', 'false');
       }
+    });
+  }
+
+  _positionPanel(trigger) {
+    const rect = trigger.getBoundingClientRect();
+    this._panel.style.top = `${rect.bottom + 6}px`;
+    this._panel.style.right = `${window.innerWidth - rect.right}px`;
+  }
+
+  _filterList(query) {
+    const q = query.toLowerCase();
+    this._list.querySelectorAll('.partner-dropdown__item').forEach((item) => {
+      if (item.dataset.value === '' || item.dataset.value === '__random__') return;
+      item.hidden = !item.dataset.value.toLowerCase().includes(q);
     });
   }
 
