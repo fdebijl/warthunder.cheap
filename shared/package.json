@@ -6,7 +6,7 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
-    "compile": "tsc",
+    "build": "tsc",
     "lint": "eslint \"./src/**/*.ts\" --max-warnings 10"
   },
   "dependencies": {

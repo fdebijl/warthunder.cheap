@@ -4,7 +4,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "compile": "tsc",
+    "build": "tsc",
     "lint": "eslint \"./src/**/*.ts\" --max-warnings 10",
     "start": "node index.js",
     "start:dev": "tsx --inspect src",
