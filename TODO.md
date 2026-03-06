@@ -1,7 +1,6 @@
 Todo:
 - Website
   - Compatibility with screen readers/a11y in general
-  - Search
   - Scrape vehicle type and add filtering by it
   - The 'Last known price (discounted)' tag is not muted (it should be)
   - SEO?

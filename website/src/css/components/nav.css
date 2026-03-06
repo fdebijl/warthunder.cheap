@@ -92,6 +92,37 @@ nav > ul > li > a.sorting__up:after {
   margin-left: 0.5em;
 }
 
+.item-search {
+  padding: 1rem 2rem 0;
+}
+
+.item-search input {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'Fira Sans', sans-serif;
+  font-size: 12pt;
+  font-weight: 300;
+  outline: none;
+  transition: border-color 200ms;
+}
+
+.item-search input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.item-search input:focus {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.item-search input::-webkit-search-cancel-button {
+  filter: invert(1) opacity(0.5);
+  cursor: pointer;
+}
+
 @media screen and (max-width: 1000px) {
   nav > ul > li {
     flex-shrink: 1;
