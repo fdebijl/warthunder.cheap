@@ -38,10 +38,10 @@ npm run lint --workspace=api
 npm run lint --workspace=scraper
 npm run lint --workspace=website
 
-# Compile TypeScript
-npm run compile --workspace=shared
-npm run compile --workspace=api
-npm run compile --workspace=scraper
+# Build TypeScript
+npm run build --workspace=shared
+npm run build --workspace=api
+npm run build --workspace=scraper
 
 # Dev (watch mode with tsx)
 npm run start:watch --workspace=api

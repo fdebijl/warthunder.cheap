@@ -34,8 +34,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
         run: npm install --workspace scraper
-      - name: Compile
-        run: npm run compile --workspace=shared --workspace=scraper
+      - name: Build
+        run: npm run build --workspace=shared --workspace=scraper
   dry-run:
     name: Build and Run
     runs-on: ubuntu-latest

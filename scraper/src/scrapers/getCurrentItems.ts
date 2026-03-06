@@ -70,7 +70,7 @@ export const getCurrentItems = async (
 
       try {
         await page.waitForSelector(selectors.PAGE_NEXT, { visible: false, timeout: slowMode ? 20_000 : 2_000 });
-      } catch (e) {
+      } catch {
         clog.log('No next page button found, stopping pagination', LOGLEVEL.DEBUG);
         break;
       }
