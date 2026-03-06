@@ -41,7 +41,7 @@ const getItemsOnPage2022 = async (page: Page, selectors: SelectorSet, category: 
       const id = href ? Number(new URLSearchParams(href.split('?')[1]).get('id')) : null;
       const poster = itemEl.querySelector<HTMLImageElement>(selectors.ITEM__POSTER)?.dataset.src ?? null;
       const title = itemEl.querySelector<HTMLDivElement>(selectors.ITEM__TITLE)?.textContent?.trim();
-      const rank = itemEl.querySelector<HTMLDivElement>(selectors.ITEM__RANK)?.textContent?.trim();
+      const rank = itemEl.querySelector<HTMLDivElement>(selectors.ITEM__RANK)?.textContent?.trim().split(',')[1].trim();
       const nation = itemEl.querySelector<HTMLDivElement>(selectors.ITEM__NATION)?.classList[1].replace('flag_wt_', '');
       const description = Array.from(
         itemEl.querySelectorAll<HTMLLIElement>(selectors.ITEM__DESCRIPTION!)
