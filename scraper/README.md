@@ -13,3 +13,9 @@ Flags:
   --imaging
         Store images for each scraped item
 ```
+
+Default schedule:
+- Pricing: `0 17 * * *`
+  - Scrape the store every day at 17:00 (UTC) to get the latest pricing information.
+- Availability/new items: `15,45 * * * *`
+  - Scrape the store every hour at 15 and 45 minutes past the hour to get updates on item availability and new items.
