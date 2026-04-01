@@ -1,6 +1,6 @@
 import { Clog, LOGLEVEL } from '@fdebijl/clog';
 import { milliseconds } from '@fdebijl/pog';
-import { Price, listItems, insertPrice, upsertItem, } from 'wtcheap.shared';
+import { Price, listItems, insertPrice, upsertItem, disconnect } from 'wtcheap.shared';
 
 import { getCurrentItems, deepCheckItem } from './scrapers/index.js';
 import { availableAlertNeeded, discountAlertNeeded, triggerAlertsForAvailable, triggerAlertsForDiscount, triggerAlertsForItems } from './alerting/index.js';
@@ -91,6 +91,7 @@ const main = async () => {
     await fetch(HEARTBEAT_URL);
   }
 
+  await disconnect();
   process.exit(0);
 };
 
