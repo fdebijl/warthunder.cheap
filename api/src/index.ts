@@ -12,7 +12,8 @@ import {
   alertExists,
   queryAlerts,
   deleteAlert,
-  findAlert
+  findAlert,
+  disconnect
 } from 'wtcheap.shared';
 
 import { API_VERSION, PATH_PREFIX, PORT, JWT_SECRET } from './constants.js';
@@ -168,10 +169,19 @@ app.get(`/${PATH_PREFIX}/${API_VERSION}/tokens/whoami`, async (req, res) => {
   res.status(200).send(JSON.stringify({ email: user.sub }));
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   if (JWT_SECRET.includes('unsafe')) {
     clog.log('JWT_SECRET is unsafe, make sure to set a proper secret if this is not a development environment', LOGLEVEL.WARN);
   }
 
   clog.log(`Server running at ${PORT}`);
 });
+
+const shutdown = async () => {
+  server.close();
+  await disconnect();
+  process.exit(0);
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
