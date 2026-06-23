@@ -1,20 +1,24 @@
 import { Db, MongoClient } from 'mongodb';
-
 import { MONGODB_URI } from '../constants.js';
 
-let client: MongoClient | null = null;
+let clientPromise: Promise<MongoClient> | null = null;
 
 export const connect = async (): Promise<Db> => {
-  if (!client) {
-    client = new MongoClient(MONGODB_URI);
-    await client.connect();
+  if (!clientPromise) {
+    const client = new MongoClient(MONGODB_URI);
+    clientPromise = client.connect().catch((err) => {
+      clientPromise = null; // don't cache a failed connect
+      throw err;
+    });
   }
+  const client = await clientPromise;
   return client.db();
-}
+};
 
 export const disconnect = async (): Promise<void> => {
-  if (client) {
-    await client.close();
-    client = null;
+  if (clientPromise) {
+    const client = await clientPromise.catch(() => null);
+    clientPromise = null;
+    if (client) await client.close();
   }
-}
+};
