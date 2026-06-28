@@ -24,4 +24,3 @@ updates:
     rebase-strategy: "auto"
     cooldown:
       default-days: 14
-      semver-major-days: 28
