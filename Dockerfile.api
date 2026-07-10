@@ -18,5 +18,9 @@ COPY --from=builder /usr/src/app/api/dist ./
 COPY --from=base /usr/src/app/node_modules /usr/src/app/node_modules
 COPY --from=base /usr/src/app/shared /usr/src/app/shared
 RUN npm install --omit=dev
+
+COPY extractor/output/vehicles.sqlite ./vehicles.sqlite
 ENV NODE_ENV=production
+
+ENV VEHICLE_DB_PATH=/usr/src/app/api/vehicles.sqlite
 CMD ["npm", "start"]

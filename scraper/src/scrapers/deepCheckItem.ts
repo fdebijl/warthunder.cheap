@@ -65,6 +65,7 @@ export const deepCheckItem = async (
 
   item.details.media = media;
   item.details.description = description;
+  item.wikiHref = detailsInfo.wikiHref ?? null;
 
   return item;
 }

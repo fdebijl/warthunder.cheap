@@ -115,8 +115,9 @@ export const getCurrentItems = async (
     });
 
     const selectors = await matchSelectors(page);
-    const { details } = await deepCheckItem({ item, selectors, page, skip404Check: true });
+    const { details, wikiHref } = await deepCheckItem({ item, selectors, page, skip404Check: true });
     item.details = details;
+    item.wikiHref = wikiHref;
 
     await milliseconds(slowMode ? 2000 : 500);
   }

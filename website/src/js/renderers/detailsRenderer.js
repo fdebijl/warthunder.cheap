@@ -356,6 +356,12 @@ export class DetailsRenderer extends EventTarget {
 
     detailWrapper.appendChild(chartWrapper);
 
+    // Vehicle information (filled asynchronously by renderVehicleInfo once the
+    // matched datamine vehicle blob(s) are fetched). Sits below the price graph.
+    const vehicleWrapper = document.createElement('div');
+    vehicleWrapper.classList.add('details__vehicles-wrapper');
+    detailWrapper.appendChild(vehicleWrapper);
+
     // Close button
     const closeButtonWrapper = document.createElement('div');
     closeButtonWrapper.classList.add('center');
@@ -406,7 +412,91 @@ export class DetailsRenderer extends EventTarget {
       this.dispatchEvent(new Event('item_selected'));
 
       this.renderChart();
+      this.renderVehicleInfo(data);
     }
+  }
+
+  /**
+   * Fetch the matched datamine vehicle(s) and render key specs + a wiki link
+   * below the price graph. Packs may bundle several vehicles, so we render one
+   * block per matched id. No-ops silently when the item has no match.
+   */
+  async renderVehicleInfo(data) {
+    const wrapper = document.querySelector('.details__vehicles-wrapper');
+    if (!wrapper) return;
+    wrapper.innerHTML = '';
+
+    const ids = data.datamineIds ?? [];
+    if (ids.length === 0) return;
+
+    const vehicles = await Promise.all(
+      ids.map((id) => fetch(`${API_URL}/vehicle/${encodeURIComponent(id)}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .catch(() => null)),
+    );
+
+    const rendered = vehicles.filter(Boolean);
+    if (rendered.length === 0) return;
+
+    const header = document.createElement('h2');
+    header.classList.add('details__vehicles-header');
+    header.textContent = rendered.length > 1 ? `Vehicles in this pack (${rendered.length})` : 'Vehicle information';
+    wrapper.appendChild(header);
+
+    for (const vehicle of rendered) {
+      wrapper.appendChild(this.buildVehicleCard(vehicle));
+    }
+  }
+
+  buildVehicleCard(vehicle) {
+    const prettyType = (type) => (type ? type.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase()) : null);
+    const name = vehicle.localizedNames?.extended?.en || vehicle.localizedNames?.short?.en || vehicle.identifier;
+
+    const card = document.createElement('div');
+    card.classList.add('vehicle-card');
+
+    const cardHeader = document.createElement('div');
+    cardHeader.classList.add('vehicle-card__header');
+
+    const cardTitle = document.createElement('h3');
+    cardTitle.classList.add('vehicle-card__title');
+    cardTitle.textContent = name;
+    cardHeader.appendChild(cardTitle);
+
+    const wikiLink = document.createElement('a');
+    wikiLink.classList.add('vehicle-card__wiki');
+    wikiLink.href = `https://wiki.warthunder.com/unit/${encodeURIComponent(vehicle.identifier)}`;
+    wikiLink.target = '_blank';
+    wikiLink.rel = 'noopener';
+    wikiLink.textContent = 'View on Wiki ↗';
+    cardHeader.appendChild(wikiLink);
+
+    card.appendChild(cardHeader);
+
+    // Key specs — only render the stats that are present/meaningful.
+    const stats = [];
+    if (prettyType(vehicle.vehicle_type)) stats.push(['Class', prettyType(vehicle.vehicle_type)]);
+    const brParts = [vehicle.arcade_br, vehicle.realistic_br, vehicle.simulator_br].filter((v) => typeof v === 'number');
+    if (brParts.length) stats.push(['BR (AB/RB/SB)', brParts.map((v) => v.toFixed(1)).join(' / ')]);
+    if (vehicle.crew_total_count) stats.push(['Crew', String(vehicle.crew_total_count)]);
+    if (vehicle.mass) stats.push(['Mass', `${(vehicle.mass / 1000).toFixed(1)} t`]);
+    if (vehicle.engine?.max_speed_rb_sb) stats.push(['Max speed', `${vehicle.engine.max_speed_rb_sb} km/h`]);
+    if (vehicle.engine?.horse_power_rb_sb) stats.push(['Engine', `${vehicle.engine.horse_power_rb_sb} hp`]);
+    if (vehicle.is_premium) stats.push(['Type', vehicle.is_pack ? 'Pack vehicle' : 'Premium vehicle']);
+
+    const grid = document.createElement('dl');
+    grid.classList.add('vehicle-card__stats');
+    for (const [label, value] of stats) {
+      const dt = document.createElement('dt');
+      dt.textContent = label;
+      const dd = document.createElement('dd');
+      dd.textContent = value;
+      grid.appendChild(dt);
+      grid.appendChild(dd);
+    }
+    card.appendChild(grid);
+
+    return card;
   }
 
   async renderChart() {

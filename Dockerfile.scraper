@@ -21,6 +21,10 @@ COPY package.json /usr/src/app
 COPY --from=builder /usr/src/app/scraper/dist ./
 COPY --from=base /usr/src/app/node_modules /usr/src/app/node_modules
 COPY --from=base /usr/src/app/shared /usr/src/app/shared
+
+COPY extractor/output/vehicles.sqlite /usr/src/app/scraper/vehicles.sqlite
+ENV VEHICLE_DB_PATH=/usr/src/app/scraper/vehicles.sqlite
+
 RUN npm install --omit=dev
 RUN npx puppeteer browsers install chrome
 

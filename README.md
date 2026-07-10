@@ -6,11 +6,12 @@ WarThunder.Cheap is a web application that tracks item prices, discounts, and av
 - An item is back in stock
 - New items are added
 
-The system consists of three main components:
+The system consists of three main components, plus a build-time data tool:
 
-1. **Scraper:** Periodically scrapes the War Thunder store using puppeteer to update price and item information.
+1. **Scraper:** Periodically scrapes the War Thunder store using puppeteer to update price and item information, and matches each store item to the real vehicle(s) it contains.
 2. **API:** Exposes the scraped data and manages user alerts.
 3. **Website:** The interface for browsing item data and managing alerts.
+4. **Extractor:** A standalone tool that parses the [War Thunder datamine](https://github.com/gszabi99/War-Thunder-Datamine) into a `vehicles.sqlite` database (battle ratings, specs, localized names) used by the scraper's matcher and served by the API. See [Vehicle data (extractor)](#vehicle-data-extractor).
 
 ## Local Development
 
@@ -34,6 +35,8 @@ Create a `.env` file in both `api/` and `scraper/` as needed. All env vars have 
 MAILGUN_API_KEY=your_key
 MAILGUN_DOMAIN=mail.example.com
 MAILGUN_SENDER=noreply@example.com
+# Optional — enables the /vehicle endpoint. See "Vehicle data (extractor)" below.
+VEHICLE_DB_PATH=/path/to/warthunder.cheap/extractor/output/vehicles.sqlite
 ```
 
 **`scraper/.env`**
@@ -42,6 +45,8 @@ MAILGUN_API_KEY=your_key
 MAILGUN_DOMAIN=mail.example.com
 MAILGUN_SENDER=noreply@example.com
 MEDIA_PATH=/path/to/warthunder.cheap/website/src/media
+# Optional — enables store-item ↔ vehicle matching. See "Vehicle data (extractor)" below.
+VEHICLE_DB_PATH=/path/to/warthunder.cheap/extractor/output/vehicles.sqlite
 ```
 
 ### Running each component
@@ -74,6 +79,33 @@ The website reads `API_URL` from a generated `js/env.js` file (injected by the D
 export const API_URL = 'http://localhost:3000/api/v1';
 ```
 or point your static server's proxy at the local API.
+
+### Vehicle data (extractor)
+
+Battle ratings, vehicle specs, and the store-item ↔ vehicle matching are powered by a SQLite database (`vehicles.sqlite`) generated from the War Thunder datamine by the standalone `extractor/` tool. The API serves it (`GET /api/v1/vehicle/:datamineId`) and the scraper reads it to match store items to real vehicles. The app runs fine without it — those features simply stay empty — so this step is optional for frontend-only work.
+
+Generate it with the helper script, which sparsely clones the datamine (skipping the multi-GB texture directories) and runs the extractor:
+
+```bash
+./.github/build-vehicle-db.sh
+# -> writes extractor/output/vehicles.sqlite (~34 MB)
+```
+
+Or, if you already have a datamine checkout:
+
+```bash
+node extractor/src/main.js --datamine /path/to/War-Thunder-Datamine
+```
+
+The extractor needs Node 24 (it uses the built-in `node:sqlite`) and has **no dependencies** — no `npm install` required.
+
+Then point the API and scraper at the generated file via `VEHICLE_DB_PATH` (an absolute path is recommended) in their respective `.env` files:
+
+```
+VEHICLE_DB_PATH=/absolute/path/to/warthunder.cheap/extractor/output/vehicles.sqlite
+```
+
+In production the DB is baked into the API and scraper Docker images: CI runs `./.github/build-vehicle-db.sh` before `docker build`, and the Dockerfiles `COPY extractor/output/vehicles.sqlite` into the image and set `VEHICLE_DB_PATH` (see `Dockerfile.api` / `Dockerfile.scraper`). Re-run the extractor whenever the datamine updates to refresh the data.
 
 ### Linting
 

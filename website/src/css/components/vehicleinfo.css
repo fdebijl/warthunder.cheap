@@ -1,0 +1,71 @@
+/* Datamine vehicle information shown on the details dialog, below the price graph. */
+
+.details__vehicles-wrapper {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  width: 100%;
+  margin-top: 2rem;
+}
+
+.details__vehicles-header {
+  margin-bottom: 1rem;
+}
+
+.vehicle-card {
+  width: 100%;
+  max-width: 640px;
+  box-sizing: border-box;
+  background: hsl(214, 21%, 15%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.vehicle-card__header {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.vehicle-card__title {
+  margin: 0;
+  font-weight: 400;
+}
+
+.vehicle-card__wiki {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  font-size: 10pt;
+  white-space: nowrap;
+}
+
+.vehicle-card__wiki:hover {
+  color: #FFF;
+}
+
+.vehicle-card__stats {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem 1.25rem;
+  margin: 0;
+}
+
+.vehicle-card__stats dt {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 300;
+}
+
+.vehicle-card__stats dd {
+  margin: 0;
+  font-weight: 400;
+}
+
+/* BR on the item card meta line */
+.item__meta__br {
+  color: rgba(255, 255, 255, 0.8);
+}

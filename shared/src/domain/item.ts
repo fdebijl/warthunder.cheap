@@ -40,6 +40,20 @@ export interface Item {
     /** Extended description from the item's store page */
     description?: string,
   };
+  /** URL to the War Thunder wiki page linked from the store page, if any (used for datamine matching) */
+  wikiHref?: string | null;
+  /**
+   * Datamine vehicle identifier(s) this store item maps to. Packs may bundle
+   * several vehicles, so this is 0..N. `undefined`/`null` = not matched yet;
+   * `[]` = matcher ran but found no confident match.
+   */
+  datamineIds?: string[] | null;
+  /** How {@link datamineIds} was determined. */
+  datamineMatchMethod?: 'video' | 'wiki' | 'fuzzy' | null;
+  /** Headline realistic battle rating of the matched (primary) vehicle, denormalized for display/sorting. */
+  br?: number | null;
+  /** Broad vehicle class of the matched (primary) vehicle ('Tank' | 'Plane' | 'Helicopter' | 'Ship'), for filtering. */
+  vehicleClass?: string | null;
   /** Date the item was entered into the DB */
   createdAt?: Date;
   /** Date the item was last updated in the DB */

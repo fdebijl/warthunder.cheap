@@ -1,0 +1,56 @@
+name: Checks (website)
+
+on: [push]
+
+env:
+  NODE_VERSION: 22
+  CI: true
+  NODE_ENV: ci
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: npm install --workspace=website
+      - name: Run lint
+        run: npm run lint --workspace=website
+  dry-run:
+    name: Build and Run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build dockerfile
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          load: true
+          tags: wtcheap.website:latest-ci
+          context: .
+          file: ./Dockerfile.website
+      - name: Log in to Docker Hub
+        if: github.ref == 'refs/heads/master'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Push image to Docker Hub
+        if: github.ref == 'refs/heads/master'
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          tags: fdebijl/warthunder.cheap:latest-website
+          context: .
+          file: ./Dockerfile.website

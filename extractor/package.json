@@ -1,0 +1,14 @@
+{
+  "name": "wt-vehicle-data-extract-node",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "wt-extract": "src/main.js"
+  },
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

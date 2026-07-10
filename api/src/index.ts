@@ -13,7 +13,8 @@ import {
   queryAlerts,
   deleteAlert,
   findAlert,
-  disconnect
+  disconnect,
+  getVehicleBlob
 } from 'wtcheap.shared';
 
 import { API_VERSION, PATH_PREFIX, PORT, JWT_SECRET } from './constants.js';
@@ -55,6 +56,23 @@ app.get(`/${PATH_PREFIX}/${API_VERSION}/prices/:itemId`, async (req, res) => {
   }
 
   res.status(200).json(priceData);
+});
+
+app.get(`/${PATH_PREFIX}/${API_VERSION}/vehicle/:datamineId`, async (req, res) => {
+  if (!req.params.datamineId) {
+    res.status(400).send(JSON.stringify({ message: 'Datamine ID is required' }));
+    return;
+  }
+
+  // The blob is stored pre-serialized; send it verbatim (no parse/re-stringify).
+  const blob = getVehicleBlob(req.params.datamineId);
+
+  if (!blob) {
+    res.status(404).send(JSON.stringify({ message: 'No vehicle found for datamine ID' }));
+    return;
+  }
+
+  res.status(200).type('application/json').send(blob);
 });
 
 app.post(`/${PATH_PREFIX}/${API_VERSION}/alerts`, async (req, res) => {

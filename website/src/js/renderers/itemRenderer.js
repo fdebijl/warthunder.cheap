@@ -26,6 +26,9 @@ export class ItemRenderer {
     itemDiv.dataset.rankNo = romanToNumericalRank(this.data.rank);
     itemDiv.dataset.title = this.data.title;
     itemDiv.dataset.date = this.data.firstAvailableAt ?? this.data.createdAt;
+    // Vehicle class (from datamine match) drives the type filter; only set when known.
+    if (this.data.vehicleClass) itemDiv.dataset.vehicleClass = this.data.vehicleClass;
+    if (this.data.br != null) itemDiv.dataset.br = this.data.br;
 
     const posterName = this.data.poster.split('/').pop();
     const fallbackSrc = `/media/${this.data.id}/${posterName}`;
@@ -60,7 +63,15 @@ export class ItemRenderer {
         meta.appendChild(rankSpan);
       }
 
-      if (this.data.rank && this.data.nation) {
+      if (this.data.br != null) {
+        if (this.data.rank) meta.append(', ');
+        const brSpan = document.createElement('span');
+        brSpan.classList.add('item__meta__br');
+        brSpan.textContent = `BR ${this.data.br.toFixed(1)}`;
+        meta.appendChild(brSpan);
+      }
+
+      if ((this.data.rank || this.data.br != null) && this.data.nation) {
         meta.append(' - ');
       }
 
