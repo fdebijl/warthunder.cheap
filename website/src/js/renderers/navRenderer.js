@@ -50,10 +50,12 @@ export class NavRenderer {
     this.ranks = this.findRanks();
     this.nations = this.findNations();
     this.categories = this.findCategories();
+    this.types = this.findTypes();
 
     this.setupCategories();
     this.setupNations();
     this.setupRanks();
+    this.setupTypes();
 
     this.setupSorting();
     this.setupSearch();
@@ -218,6 +220,55 @@ export class NavRenderer {
           this.activeFilters.push({
             type: 'rank',
             value: tab.dataset.filterRank
+          });
+        }
+
+        this.applyFilters();
+      });
+    });
+  }
+
+  findTypes() {
+    // Fixed display order; only include classes actually present in the item set.
+    const order = ['Tank', 'Plane', 'Helicopter', 'Ship'];
+    const present = new Set(this.items.map((item) => item.vehicleClass).filter(Boolean));
+    return ['All', ...order.filter((type) => present.has(type))];
+  }
+
+  setupTypes() {
+    const container = document.querySelector('.filter__types');
+    if (!container) return;
+
+    for (const type of this.types) {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+
+      a.href = '#';
+      a.classList.add('navtab');
+      a.dataset.filterType = type;
+      a.textContent = type;
+
+      if (type === 'All') {
+        a.classList.add('active');
+      }
+
+      li.appendChild(a);
+      container.appendChild(li);
+    }
+
+    document.querySelectorAll('.filter__types .navtab').forEach((tab) => {
+      tab.addEventListener('click', async (event) => {
+        event.preventDefault();
+
+        document.querySelector('.filter__types .navtab.active')?.classList.remove('active');
+        // Cards carry the class in dataset.vehicleClass, so the filter type matches that key.
+        this.activeFilters = this.activeFilters.filter((filter) => filter.type !== 'vehicleClass');
+        tab.classList.add('active');
+
+        if (tab.dataset.filterType !== 'All') {
+          this.activeFilters.push({
+            type: 'vehicleClass',
+            value: tab.dataset.filterType
           });
         }
 

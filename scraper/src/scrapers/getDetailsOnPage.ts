@@ -12,6 +12,8 @@ type DetailsInfo = {
   media: string[];
   description?: string;
   shortDescription?: string;
+  /** War Thunder wiki link on the store page, if present (used for datamine matching) */
+  wikiHref?: string;
 }
 
 export const getDetailsOnPage = async ({ page, selectors }: { page: Page, selectors: SelectorSet }): Promise<DetailsInfo> => {
@@ -41,6 +43,7 @@ const getDetailsOnPage2022 = async (page: Page, selectors: SelectorSet): Promise
     const shortDescription = Array.from(
       document.querySelectorAll<HTMLLIElement>(SELECTORS.PAGE__SHORT_DESCRIPTION!)
     ).map((li) => li.textContent?.trim() ?? '').join(' ');
+    const wikiHref = document.querySelector<HTMLAnchorElement>('a[href*="wiki.warthunder.com"]')?.href;
 
     const stripCurrency = (price: string): number => {
       if (!price) {
@@ -60,7 +63,8 @@ const getDetailsOnPage2022 = async (page: Page, selectors: SelectorSet): Promise
       defaultPrice: stripCurrency(defaultPriceEl?.textContent?.trim() as string),
       media,
       description,
-      shortDescription
+      shortDescription,
+      wikiHref
     };
   }, selectors);
 
@@ -81,6 +85,7 @@ const getDetailsOnPage2016 = async (page: Page, selectors: SelectorSet): Promise
     const shortDescription = Array.from(
       document.querySelectorAll<HTMLLIElement>(SELECTORS.PAGE__SHORT_DESCRIPTION!)
     ).map((li) => li.textContent?.trim() ?? '').join(' ');
+    const wikiHref = document.querySelector<HTMLAnchorElement>('a[href*="wiki.warthunder.com"]')?.href;
 
     const stripCurrency = (price: string): number => {
       if (!price) {
@@ -100,7 +105,8 @@ const getDetailsOnPage2016 = async (page: Page, selectors: SelectorSet): Promise
       defaultPrice: stripCurrency(defaultPriceEl?.textContent?.trim() as string),
       media,
       description,
-      shortDescription
+      shortDescription,
+      wikiHref
     };
   }, selectors);
 

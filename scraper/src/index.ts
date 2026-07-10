@@ -1,8 +1,9 @@
 import { Clog, LOGLEVEL } from '@fdebijl/clog';
 import { milliseconds } from '@fdebijl/pog';
-import { Price, listItems, insertPrice, upsertItem, disconnect } from 'wtcheap.shared';
+import { Price, listItems, insertPrice, upsertItem, disconnect, loadVehicleRefs, vehicleDbAvailable } from 'wtcheap.shared';
 
 import { getCurrentItems, deepCheckItem } from './scrapers/index.js';
+import { buildMatchIndex, matchItemFull } from './matcher/index.js';
 import { availableAlertNeeded, discountAlertNeeded, triggerAlertsForAvailable, triggerAlertsForDiscount, triggerAlertsForItems } from './alerting/index.js';
 import { HEARTBEAT_URL, SHOP_2022_SELECTORS, TARGET_ROOTS } from './constants.js';
 import { waybackMain } from './wayback.js';
@@ -28,6 +29,16 @@ const main = async () => {
   clog.log(`Found ${newItems.length} new items`);
   clog.log(`Found ${notCurrentKnownItems.length} known items that are no longer current`);
 
+  // Load the datamine vehicle reference index once (from the SQLite DB baked into the image).
+  const vehicleRefs = vehicleDbAvailable() ? loadVehicleRefs() : [];
+  const matchIndex = vehicleRefs.length > 0 ? buildMatchIndex(vehicleRefs) : null;
+  const refsById = new Map(vehicleRefs.map((ref) => [ref.identifier, ref]));
+  if (!matchIndex) {
+    clog.log('No datamine vehicle DB found (VEHICLE_DB_PATH) — skipping matching. Build it with the extractor.', LOGLEVEL.WARN);
+  } else {
+    clog.log(`Loaded ${vehicleRefs.length} datamine vehicles for matching`);
+  }
+
   for (const item of currentItems) {
     const matchingItem = existingItems.find((existingItem) => existingItem.id === item.id);
 
@@ -51,6 +62,22 @@ const main = async () => {
 
     if (matchingItem && !matchingItem.firstAvailableAt) {
       item.firstAvailableAt = matchingItem.createdAt;
+    }
+
+    // Match the store item to datamine vehicle(s) and persist the identifier(s).
+    // Only write on a confident match: a no-match run leaves the field untouched so
+    // a flaky scrape (e.g. media not captured) can't clobber a previously-good match.
+    if (matchIndex) {
+      const match = await matchItemFull(item, matchIndex);
+      if (match) {
+        item.datamineIds = match.ids;
+        item.datamineMatchMethod = match.method;
+        // Denormalize BR + broad class from the primary (first) matched vehicle for
+        // display and filtering, so the frontend needn't resolve the vehicle itself.
+        const primary = refsById.get(match.ids[0]);
+        item.br = primary?.realisticBr ?? null;
+        item.vehicleClass = primary?.vehicleClass ?? null;
+      }
     }
 
     item.source = 'live';
