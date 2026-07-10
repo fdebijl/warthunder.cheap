@@ -39,6 +39,22 @@ const main = async () => {
     clog.log(`Loaded ${vehicleRefs.length} datamine vehicles for matching`);
   }
 
+  // Match a store item to datamine vehicle(s) and denormalize the identifier(s),
+  // headline BR and broad class onto it. Only writes on a confident match, so a
+  // no-match run leaves prior values untouched (a flaky scrape can't clobber a good
+  // match). Applied to both current AND archived items — removed vehicles are
+  // retained in the datamine, so archived packs (e.g. the Panther II) still resolve.
+  const applyMatch = async (item: typeof currentItems[number]): Promise<void> => {
+    if (!matchIndex) return;
+    const match = await matchItemFull(item, matchIndex);
+    if (!match) return;
+    item.datamineIds = match.ids;
+    item.datamineMatchMethod = match.method;
+    const primary = refsById.get(match.ids[0]);
+    item.br = primary?.realisticBr ?? null;
+    item.vehicleClass = primary?.vehicleClass ?? null;
+  };
+
   for (const item of currentItems) {
     const matchingItem = existingItems.find((existingItem) => existingItem.id === item.id);
 
@@ -64,21 +80,7 @@ const main = async () => {
       item.firstAvailableAt = matchingItem.createdAt;
     }
 
-    // Match the store item to datamine vehicle(s) and persist the identifier(s).
-    // Only write on a confident match: a no-match run leaves the field untouched so
-    // a flaky scrape (e.g. media not captured) can't clobber a previously-good match.
-    if (matchIndex) {
-      const match = await matchItemFull(item, matchIndex);
-      if (match) {
-        item.datamineIds = match.ids;
-        item.datamineMatchMethod = match.method;
-        // Denormalize BR + broad class from the primary (first) matched vehicle for
-        // display and filtering, so the frontend needn't resolve the vehicle itself.
-        const primary = refsById.get(match.ids[0]);
-        item.br = primary?.realisticBr ?? null;
-        item.vehicleClass = primary?.vehicleClass ?? null;
-      }
-    }
+    await applyMatch(item);
 
     item.source = 'live';
     await upsertItem(item);
@@ -104,6 +106,11 @@ const main = async () => {
     if (knownItem.buyable && !item.buyable) {
       item.lastAvailableAt = new Date(Date.now() - 12 * 60 * 60 * 1000);
     }
+
+    // Archived/no-longer-current items still map to (retained) datamine vehicles.
+    // deepCheckItem refreshes media/wikiHref where the page is reachable and
+    // otherwise preserves the prior values, so the matcher has what it needs.
+    await applyMatch(item);
 
     await upsertItem(item);
   }
