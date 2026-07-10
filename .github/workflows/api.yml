@@ -71,3 +71,17 @@ jobs:
           MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
           MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
           MAILGUN_SENDER: ${{ secrets.MAILGUN_SENDER }}
+      - name: Log in to Docker Hub
+        if: github.ref == 'refs/heads/master'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Push image to Docker Hub
+        if: github.ref == 'refs/heads/master'
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          tags: fdebijl/warthunder.cheap:latest-api
+          context: .
+          file: ./Dockerfile.api
