@@ -3,6 +3,73 @@ import { isAuthenticated } from '../util/authenticate.js';
 import { capitalize } from '../util/capitalize.js';
 import { API_URL } from '../env.js';
 
+let detailsTemplate;
+let vehicleTemplate;
+
+/**
+ * Derive the pricing presentation from item data. Pure — no DOM — so the
+ * discounted / unknown / normal branch lives in one readable place. Returns the
+ * price paragraph(s) to render plus the discount caption.
+ */
+function pricingView(data, referalRenderer) {
+  if (data.isDiscounted) {
+    return {
+      prices: [
+        { text: `€${data.oldPrice.toFixed(2)}`, classes: ['details__price', 'details__price-old'] },
+        { text: `€${data.newPrice.toFixed(2)}`, classes: ['details__price-new'] },
+      ],
+      discount: `${data.discountPercent || 0}% discount over normal price`,
+    };
+  }
+
+  if (!data.oldPrice && !data.newPrice && !data.defaultPrice) {
+    return {
+      prices: [{ text: 'Unknown', classes: ['details__price'] }],
+      discount: 'No pricing information available',
+    };
+  }
+
+  let priceValue = data.defaultPrice ?? data.oldPrice;
+  if (referalRenderer && data.category !== 'GoldenEagles') {
+    priceValue *= referalRenderer.discountFactor;
+  }
+
+  return {
+    prices: [{ text: `€${priceValue.toFixed(2)}`, classes: ['details__price'] }],
+    discount: 'Normal pricing for this item',
+  };
+}
+
+/** Build the scrape-metadata block as an HTML string (the inspect link is appended separately). */
+function scrapeInfoHtml(data) {
+  let html = `ID: ${data.id}<br>`;
+  html += `Source: ${capitalize(data.source || 'live')}<br>`;
+  if (!data.buyable) html += `Store link: <a href="${data.href}" target="_blank">${data.href}</a><br>`;
+  if (!data.buyable && data.archivedHref) html += `Archive link: <a href="${data.archivedHref}" target="_blank">${data.archivedHref}</a><br>`;
+  html += `First available: ${new Date(data.firstAvailableAt ?? data.createdAt).toDateString()}<br>`;
+  if (!data.buyable && data.lastAvailableAt) html += `Last available: ${new Date(data.lastAvailableAt).toDateString()}<br>`;
+  html += `First scraped: ${new Date(data.createdAt).toDateString()}<br>`;
+  html += `Last scraped: ${new Date(data.updatedAt).toDateString()}`;
+  html += `<br><br>`;
+  return html;
+}
+
+/** Select the key specs worth showing for a datamine vehicle blob. Pure — returns [label, value] pairs. */
+function vehicleStats(vehicle) {
+  const prettyType = (type) => (type ? type.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase()) : null);
+
+  const stats = [];
+  if (prettyType(vehicle.vehicle_type)) stats.push(['Class', prettyType(vehicle.vehicle_type)]);
+  const brParts = [vehicle.arcade_br, vehicle.realistic_br, vehicle.simulator_br].filter((v) => typeof v === 'number');
+  if (brParts.length) stats.push(['BR (AB/RB/SB)', brParts.map((v) => v.toFixed(1)).join(' / ')]);
+  if (vehicle.crew_total_count) stats.push(['Crew', String(vehicle.crew_total_count)]);
+  if (vehicle.mass) stats.push(['Mass', `${(vehicle.mass / 1000).toFixed(1)} t`]);
+  if (vehicle.engine?.max_speed_rb_sb) stats.push(['Max speed', `${vehicle.engine.max_speed_rb_sb} km/h`]);
+  if (vehicle.engine?.horse_power_rb_sb) stats.push(['Engine', `${vehicle.engine.horse_power_rb_sb} hp`]);
+  if (vehicle.is_premium) stats.push(['Type', vehicle.is_pack ? 'Pack vehicle' : 'Premium vehicle']);
+  return stats;
+}
+
 /** The DetailsRenderer handles populating the modal that shows when clicking 'View details' on an item card */
 export class DetailsRenderer extends EventTarget {
   item;
@@ -44,21 +111,137 @@ export class DetailsRenderer extends EventTarget {
 
   updateDetailsElement(data) {
     const dialog = document.querySelector('#details');
-    const wrapper = dialog.querySelector('.dialog__wrapper');
 
     if (!dialog) {
       console.error('Details dialog not found in DOM.');
       return;
     }
 
+    const wrapper = dialog.querySelector('.dialog__wrapper');
     wrapper.innerHTML = '';
 
-    const carousel = document.createElement('div');
-    carousel.classList.add('carousel');
+    detailsTemplate ??= document.getElementById('tpl-details');
+    const frag = detailsTemplate.content.cloneNode(true);
+    const ref = (name) => frag.querySelector(`[data-ref="${name}"]`);
 
-    const slidesContainer = document.createElement('div');
-    slidesContainer.classList.add('carousel__slides');
+    this.#renderCarousel(ref('slides'), data);
 
+    ref('title').textContent = data.title;
+
+    // Archive warning
+    if (data.source !== 'archive') ref('archive').remove();
+
+    // Pricing
+    const view = pricingView(data, this.referalRenderer);
+    const pricing = ref('pricing');
+    for (const price of view.prices) {
+      const el = document.createElement('p');
+      el.classList.add(...price.classes);
+      el.textContent = price.text;
+      pricing.appendChild(el);
+    }
+    ref('discount').textContent = view.discount;
+
+    // Availability
+    ref('availability').textContent = data.buyable
+      ? 'Available'
+      : 'Not available right now, sign up for an alert below to get an email when it\'s back in the store';
+
+    // Buy button
+    if (data.buyable) {
+      ref('buy').href = data.href + (this.referalRenderer?.referalQueryParams ?? '');
+    } else {
+      ref('buyActions').remove();
+    }
+
+    // Alert form
+    const eventType = data.buyable ? 'priceChange' : 'itemAvailable';
+    const emailInput = ref('email');
+    if (this.isAuthenticated) emailInput.remove();
+
+    const alertButton = ref('alert');
+    alertButton.textContent = data.buyable ? 'Alert me on discount' : 'Alert me when available';
+
+    const alertMessage = ref('alertMessage');
+    alertButton.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      const headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+
+      if (this.isAuthenticated) {
+        headers.append('Authorization', `Bearer ${this.token}`);
+      }
+
+      fetch(`${API_URL}/alerts`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          recipient: this.isAuthenticated ? '' : emailInput.value,
+          itemId: data.id,
+          eventType,
+        }),
+      }).then(async (res) => {
+        const body = await res.json();
+        return { body, res };
+      }).then(({ body, res }) => {
+        if (!res.ok || res.status < 200 || res.status >= 300) {
+          throw new Error(body.message);
+        }
+
+        alertMessage.innerText = `Alert set, you will receive an email when the item is ${data.buyable ? 'discounted' : 'available'}`;
+        this.dispatchEvent(new Event('alert_set'));
+      }).catch((err) => {
+        alertMessage.classList.add('error');
+        alertMessage.innerText = `Failed to set alert: ${err.message}`;
+      });
+    });
+
+    // Right column: meta, description, scrape info
+    this.#renderMeta(ref('meta'), data);
+
+    if (data.description) {
+      if (data.description.indexOf(';') > -1) {
+        data.description = data.description.split(';').join('\n');
+      }
+
+      ref('descShort').textContent = data.description;
+    } else {
+      ref('descHeader').remove();
+      ref('descShort').remove();
+    }
+
+    const scrape = ref('scrape');
+    scrape.innerHTML = scrapeInfoHtml(data);
+
+    const inspectLink = document.createElement('a');
+    inspectLink.href = '#';
+    inspectLink.textContent = 'Inspect';
+    inspectLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log(data);
+
+      inspectLink.textContent = 'Check the console';
+
+      setTimeout(() => {
+        inspectLink.textContent = 'Inspect';
+      }, 10_000);
+    });
+    scrape.appendChild(inspectLink);
+
+    // Long description + chart container are static in the template; just fill the text.
+    ref('descLong').textContent = data.details?.description;
+
+    // Close button
+    ref('close').addEventListener('click', () => {
+      this.dispatchEvent(new Event('item_dismissed'));
+      dialog.close();
+    });
+
+    wrapper.appendChild(frag);
+  }
+
+  #renderCarousel(slidesContainer, data) {
     data?.details?.media.forEach((media) => {
       const mediaParts = media.split(';');
       const isVideo = mediaParts[0].endsWith('.webm') || mediaParts[0].endsWith('.mp4');
@@ -89,295 +272,26 @@ export class DetailsRenderer extends EventTarget {
         slidesContainer.appendChild(img);
       }
     });
+  }
 
-    carousel.appendChild(slidesContainer);
-    wrapper.appendChild(carousel);
+  #renderMeta(metaEl, data) {
+    const { rank, nation } = data;
 
-    const detailWrapper = document.createElement('div');
-    detailWrapper.classList.add('details__wrapper');
-
-    wrapper.appendChild(detailWrapper);
-
-    const title = document.createElement('h1');
-    title.classList.add('details__title');
-    title.textContent = data.title;
-    detailWrapper.appendChild(title);
-
-    // Archive warning
-    if (data.source === 'archive') {
-      const archiveWarning = document.createElement('p');
-      archiveWarning.classList.add('details__archive-warning');
-      archiveWarning.textContent = 'The information about this item was scraped from The Internet Archive, not all information may be accurate or complete.';
-      detailWrapper.appendChild(archiveWarning);
+    if (!rank && !nation) {
+      metaEl.remove();
+      return;
     }
 
-    const infoContainer = document.createElement('div');
-    infoContainer.classList.add('details__info');
+    const span = (cls, text) => {
+      const el = document.createElement('span');
+      el.classList.add(cls);
+      el.textContent = text;
+      return el;
+    };
 
-    // Left Info Column
-    const infoLeft = document.createElement('div');
-    infoLeft.classList.add('details__info-left');
-
-    const pricing = document.createElement('span');
-    pricing.classList.add('details__pricing');
-
-    if (data.isDiscounted) {
-      const oldPrice = document.createElement('p');
-      oldPrice.classList.add('details__price', 'details__price-old');
-
-      const newPrice = document.createElement('p');
-      newPrice.classList.add('details__price-new');
-
-      let oldPriceValue = data.oldPrice;
-      let newPriceValue = data.newPrice;
-
-      oldPrice.textContent = `€${oldPriceValue.toFixed(2)}`;
-      newPrice.textContent = `€${newPriceValue.toFixed(2)}`;
-      pricing.appendChild(oldPrice);
-      pricing.appendChild(newPrice);
-    } else if (!data.oldPrice && !data.newPrice && !data.defaultPrice) {
-      const price = document.createElement('p');
-      price.classList.add('details__price');
-      price.textContent = 'Unknown';
-      pricing.appendChild(price);
-    } else {
-      const price = document.createElement('p');
-      price.classList.add('details__price');
-
-      let priceValue = data.defaultPrice ?? data.oldPrice;
-
-      if (this.referalRenderer && data.category !== 'GoldenEagles') {
-        priceValue *= this.referalRenderer.discountFactor;
-      }
-
-      price.textContent = `€${priceValue.toFixed(2)}`;
-      pricing.appendChild(price);
-    }
-
-    infoLeft.appendChild(pricing);
-
-    const discount = document.createElement('p');
-    discount.classList.add('details__discount', 'muted');
-    if (!data.oldPrice && !data.newPrice && !data.defaultPrice) {
-      discount.textContent = 'No pricing information available';
-    } else {
-      discount.textContent = data.isDiscounted
-      ? `${data.discountPercent || 0}% discount over normal price`
-      : 'Normal pricing for this item';
-    }
-
-    infoLeft.appendChild(discount);
-
-    const availability = document.createElement('p');
-    availability.classList.add('details__availability');
-    availability.textContent = data.buyable ? 'Available' : 'Not available right now, sign up for an alert below to get an email when it\'s back in the store';
-    infoLeft.appendChild(availability);
-
-    if (data.buyable) {
-      const actionsLeftBuy = document.createElement('div');
-      actionsLeftBuy.classList.add('details__actions', 'margin-top-xs');
-
-      const buyButton = document.createElement('a');
-      let link = data.href;
-
-      if (this.referalRenderer && this.referalRenderer.referalQueryParams) {
-        link += this.referalRenderer.referalQueryParams;
-      }
-
-      buyButton.href = link;
-      buyButton.target = '_blank';
-      buyButton.classList.add('details__action', 'fab', 'primary');
-      buyButton.textContent = 'Buy';
-      actionsLeftBuy.appendChild(buyButton);
-      infoLeft.appendChild(actionsLeftBuy);
-    }
-
-    const actionsLeftAlert = document.createElement('div');
-    actionsLeftAlert.classList.add('details__actions', 'margin-top-xs');
-    const eventType = data.buyable ? 'priceChange' : 'itemAvailable';
-
-    const emailInput = document.createElement('input');
-    emailInput.type = 'email';
-    emailInput.placeholder = 'Email address for alert';
-    emailInput.classList.add('details__alert-email', 'jab');
-
-    if (!this.isAuthenticated) {
-      actionsLeftAlert.appendChild(emailInput);
-    }
-
-    const alertButton = document.createElement('a');
-    alertButton.href = '#';
-    alertButton.classList.add('details__action', 'jab', 'secondary');
-    alertButton.textContent = data.buyable ? 'Alert me on discount' : 'Alert me when available';
-
-    actionsLeftAlert.appendChild(alertButton);
-    infoLeft.appendChild(actionsLeftAlert);
-
-    // Error/success message
-    const alertMessage = document.createElement('p');
-    alertMessage.classList.add('details__alert-message', 'muted');
-    infoLeft.appendChild(alertMessage);
-
-    alertButton.addEventListener('click', (e) => {
-      e.preventDefault();
-
-      const headers = new Headers();
-      headers.append('Content-Type', 'application/json');
-
-      if (this.isAuthenticated) {
-        headers.append('Authorization', `Bearer ${this.token}`);
-      }
-
-      fetch(`${API_URL}/alerts`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          recipient: this.isAuthenticated ? '' : emailInput.value,
-          itemId: data.id,
-          eventType,
-        }),
-      }).then(async (res) => {
-        const body = await res.json();
-        return { body, res };
-      }).then(({ body, res }) => {
-        if (!res.ok || res.status < 200 || res.status >= 300) {
-          throw new Error(body.message);
-        }
-
-        alertMessage.innerText = `Alert set, you will receive an email when the item is ${data.buyable ? 'discounted' : 'available'}`;
-        this.dispatchEvent(new Event('alert_set'));
-      }).catch((e) => {
-        alertMessage.classList.add('error');
-        alertMessage.innerText = `Failed to set alert: ${e.message}`;
-      });
-    });
-
-    infoContainer.appendChild(infoLeft);
-
-    // Right Info Column
-    const infoRight = document.createElement('div');
-    infoRight.classList.add('details__info-right');
-
-    if (data.rank || data.nation) {
-      const meta = document.createElement('p');
-      meta.classList.add('details__meta', 'margin-bottom-xs');
-
-      if (data.rank) {
-        const rankSpan = document.createElement('span');
-        rankSpan.classList.add('details__meta-rank');
-        rankSpan.textContent = data.rank;
-        meta.appendChild(rankSpan);
-      }
-
-      if (data.rank && data.nation) {
-        meta.append(' - ');
-      }
-
-      if (data.nation) {
-        const countrySpan = document.createElement('span');
-        countrySpan.classList.add('details__meta-country');
-        countrySpan.textContent = capitalize(data.nation);
-        meta.appendChild(countrySpan);
-      }
-
-      infoRight.appendChild(meta);
-    }
-
-    const descriptionHeader = document.createElement('p');
-    descriptionHeader.classList.add('details__description-header');
-    descriptionHeader.textContent = 'This pack includes';
-
-    const descriptionShort = document.createElement('p');
-    descriptionShort.classList.add('details__description-short');
-
-
-    if (data.description) {
-      if (data.description?.indexOf(';') > -1) {
-        data.description = data.description.split(';').join('\n');
-      }
-
-      infoRight.appendChild(descriptionHeader);
-      descriptionShort.textContent = data.description;
-      infoRight.appendChild(descriptionShort);
-    }
-
-    const scrapeInfo = document.createElement('p');
-    scrapeInfo.classList.add('details__scrape-info', 'muted', 'margin-top-sm');
-    scrapeInfo.innerHTML = `ID: ${data.id}<br>`;
-    scrapeInfo.innerHTML += `Source: ${capitalize(data.source || 'live')}<br>`;
-    if (!data.buyable) scrapeInfo.innerHTML += `Store link: <a href="${data.href}" target="_blank">${data.href}</a><br>`;
-    if (!data.buyable && data.archivedHref) scrapeInfo.innerHTML += `Archive link: <a href="${data.archivedHref}" target="_blank">${data.archivedHref}</a><br>`;
-    scrapeInfo.innerHTML += `First available: ${new Date(data.firstAvailableAt ?? data.createdAt).toDateString()}<br>`;
-    if (!data.buyable && data.lastAvailableAt) scrapeInfo.innerHTML += `Last available: ${new Date(data.lastAvailableAt).toDateString()}<br>`;
-    scrapeInfo.innerHTML += `First scraped: ${new Date(data.createdAt).toDateString()}<br>`;
-    scrapeInfo.innerHTML += `Last scraped: ${new Date(data.updatedAt).toDateString()}`;
-    scrapeInfo.innerHTML += `<br><br>`;
-    const inspectLink = document.createElement('a');
-    inspectLink.href = '#';
-    inspectLink.textContent = 'Inspect';
-    inspectLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      console.log(data);
-
-      inspectLink.textContent = 'Check the console';
-
-      setTimeout(() => {
-        inspectLink.textContent = 'Inspect';
-      }, 10_000);
-    });
-    scrapeInfo.appendChild(inspectLink);
-    infoRight.appendChild(scrapeInfo);
-
-    infoContainer.appendChild(infoRight);
-    detailWrapper.appendChild(infoContainer);
-
-    const descriptionLongWrapper = document.createElement('div');
-    descriptionLongWrapper.classList.add('center');
-
-    const descriptionLong = document.createElement('div');
-    descriptionLong.classList.add('details__description-long');
-    descriptionLong.textContent = data.details?.description;
-    descriptionLongWrapper.appendChild(descriptionLong);
-
-    detailWrapper.appendChild(descriptionLongWrapper);
-
-    // Chart container
-    const chartWrapper = document.createElement('div');
-    chartWrapper.classList.add('details__chart-wrapper');
-
-    const chartHeader = document.createElement('h2');
-    chartHeader.classList.add('details__chart-header');
-    chartHeader.textContent = 'Price history';
-    chartWrapper.appendChild(chartHeader);
-
-    const chartContainer = document.createElement('div');
-    chartContainer.classList.add('details__chart');
-    chartWrapper.appendChild(chartContainer);
-
-    detailWrapper.appendChild(chartWrapper);
-
-    // Vehicle information (filled asynchronously by renderVehicleInfo once the
-    // matched datamine vehicle blob(s) are fetched). Sits below the price graph.
-    const vehicleWrapper = document.createElement('div');
-    vehicleWrapper.classList.add('details__vehicles-wrapper');
-    detailWrapper.appendChild(vehicleWrapper);
-
-    // Close button
-    const closeButtonWrapper = document.createElement('div');
-    closeButtonWrapper.classList.add('center');
-
-    const closeButton = document.createElement('button');
-    closeButton.classList.add('dialog_close', 'fab');
-    closeButton.textContent = 'Close';
-    closeButton.dataset.dialogId = 'details';
-
-    closeButton.addEventListener('click', () => {
-      this.dispatchEvent(new Event('item_dismissed'));
-      dialog.close();
-    });
-
-    closeButtonWrapper.appendChild(closeButton);
-    detailWrapper.appendChild(closeButtonWrapper);
+    if (rank) metaEl.appendChild(span('details__meta-rank', rank));
+    if (rank && nation) metaEl.append(' - ');
+    if (nation) metaEl.appendChild(span('details__meta-country', capitalize(nation)));
   }
 
   show(data) {
@@ -449,44 +363,16 @@ export class DetailsRenderer extends EventTarget {
   }
 
   buildVehicleCard(vehicle) {
-    const prettyType = (type) => (type ? type.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase()) : null);
+    vehicleTemplate ??= document.getElementById('tpl-vehicle-card');
+    const frag = vehicleTemplate.content.cloneNode(true);
+    const ref = (name) => frag.querySelector(`[data-ref="${name}"]`);
+
     const name = vehicle.localizedNames?.extended?.en || vehicle.localizedNames?.short?.en || vehicle.identifier;
+    ref('title').textContent = name;
+    ref('wiki').href = `https://wiki.warthunder.com/unit/${encodeURIComponent(vehicle.identifier)}`;
 
-    const card = document.createElement('div');
-    card.classList.add('vehicle-card');
-
-    const cardHeader = document.createElement('div');
-    cardHeader.classList.add('vehicle-card__header');
-
-    const cardTitle = document.createElement('h3');
-    cardTitle.classList.add('vehicle-card__title');
-    cardTitle.textContent = name;
-    cardHeader.appendChild(cardTitle);
-
-    const wikiLink = document.createElement('a');
-    wikiLink.classList.add('vehicle-card__wiki');
-    wikiLink.href = `https://wiki.warthunder.com/unit/${encodeURIComponent(vehicle.identifier)}`;
-    wikiLink.target = '_blank';
-    wikiLink.rel = 'noopener';
-    wikiLink.textContent = 'View on Wiki ↗';
-    cardHeader.appendChild(wikiLink);
-
-    card.appendChild(cardHeader);
-
-    // Key specs — only render the stats that are present/meaningful.
-    const stats = [];
-    if (prettyType(vehicle.vehicle_type)) stats.push(['Class', prettyType(vehicle.vehicle_type)]);
-    const brParts = [vehicle.arcade_br, vehicle.realistic_br, vehicle.simulator_br].filter((v) => typeof v === 'number');
-    if (brParts.length) stats.push(['BR (AB/RB/SB)', brParts.map((v) => v.toFixed(1)).join(' / ')]);
-    if (vehicle.crew_total_count) stats.push(['Crew', String(vehicle.crew_total_count)]);
-    if (vehicle.mass) stats.push(['Mass', `${(vehicle.mass / 1000).toFixed(1)} t`]);
-    if (vehicle.engine?.max_speed_rb_sb) stats.push(['Max speed', `${vehicle.engine.max_speed_rb_sb} km/h`]);
-    if (vehicle.engine?.horse_power_rb_sb) stats.push(['Engine', `${vehicle.engine.horse_power_rb_sb} hp`]);
-    if (vehicle.is_premium) stats.push(['Type', vehicle.is_pack ? 'Pack vehicle' : 'Premium vehicle']);
-
-    const grid = document.createElement('dl');
-    grid.classList.add('vehicle-card__stats');
-    for (const [label, value] of stats) {
+    const grid = ref('stats');
+    for (const [label, value] of vehicleStats(vehicle)) {
       const dt = document.createElement('dt');
       dt.textContent = label;
       const dd = document.createElement('dd');
@@ -494,9 +380,8 @@ export class DetailsRenderer extends EventTarget {
       grid.appendChild(dt);
       grid.appendChild(dd);
     }
-    card.appendChild(grid);
 
-    return card;
+    return frag;
   }
 
   async renderChart() {

@@ -1,4 +1,4 @@
-import { ItemRenderer } from './renderers/itemRenderer.js';
+import { ItemCard } from './renderers/itemRenderer.js';
 import { DetailsRenderer } from './renderers/detailsRenderer.js';
 import { ReferalRenderer } from './renderers/referalRenderer.js';
 import { AlertRenderer } from './renderers/alertRenderer.js';
@@ -35,15 +35,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   currentItems.forEach((item) => {
-    const itemRenderer = new ItemRenderer(item, referalRenderer, detailsRenderer);
-    itemRenderer.appendTo('.itemcategory.current .itemgrid');
+    const itemCard = new ItemCard(item, referalRenderer, detailsRenderer);
+    itemCard.appendTo('.itemcategory.current .itemgrid');
   });
 
   const archivedItems = await fetch(`${API_URL}/items/archived`).then((res) => res.json());
 
   archivedItems.forEach((item) => {
-    const renderer = new ItemRenderer(item, referalRenderer, detailsRenderer);
-    renderer.appendTo('.itemcategory.archived .itemgrid');
+    const card = new ItemCard(item, referalRenderer, detailsRenderer);
+    card.appendTo('.itemcategory.archived .itemgrid');
   });
 
   const allItems = [...currentItems, ...archivedItems];

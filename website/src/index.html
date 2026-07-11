@@ -119,6 +119,77 @@
     </section>
   </main>
 
+  <!-- Markup for a single item card; cloned + populated by <item-card> (see itemRenderer.js) -->
+  <template id="tpl-item">
+    <img class="lazyload" src="img/puff.svg" data-ref="img">
+    <div class="item__info">
+      <div class="item__text-wrapper">
+        <h5 class="item__title" data-ref="title"></h5>
+        <p class="item__meta" data-ref="meta"></p>
+      </div>
+      <p class="item__price" data-ref="price"></p>
+      <p class="item__discount" data-ref="discount"></p>
+    </div>
+    <div class="item__actions">
+      <a class="item__store button primary" target="_blank" data-ref="store">Buy</a>
+      <a class="item__details button secondary" data-ref="details">View Details &amp; Alerts</a>
+    </div>
+  </template>
+
+  <!-- Static skeleton of the item details modal; cloned + populated by DetailsRenderer -->
+  <template id="tpl-details">
+    <div class="carousel">
+      <div class="carousel__slides" data-ref="slides"></div>
+    </div>
+    <div class="details__wrapper">
+      <h1 class="details__title" data-ref="title"></h1>
+      <p class="details__archive-warning" data-ref="archive">The information about this item was scraped from The Internet Archive, not all information may be accurate or complete.</p>
+      <div class="details__info">
+        <div class="details__info-left">
+          <span class="details__pricing" data-ref="pricing"></span>
+          <p class="details__discount muted" data-ref="discount"></p>
+          <p class="details__availability" data-ref="availability"></p>
+          <div class="details__actions margin-top-xs" data-ref="buyActions">
+            <a class="details__action fab primary" target="_blank" data-ref="buy">Buy</a>
+          </div>
+          <div class="details__actions margin-top-xs" data-ref="alertActions">
+            <input type="email" placeholder="Email address for alert" class="details__alert-email jab" data-ref="email">
+            <a href="#" class="details__action jab secondary" data-ref="alert"></a>
+          </div>
+          <p class="details__alert-message muted" data-ref="alertMessage"></p>
+        </div>
+        <div class="details__info-right">
+          <p class="details__meta margin-bottom-xs" data-ref="meta"></p>
+          <p class="details__description-header" data-ref="descHeader">This pack includes</p>
+          <p class="details__description-short" data-ref="descShort"></p>
+          <p class="details__scrape-info muted margin-top-sm" data-ref="scrape"></p>
+        </div>
+      </div>
+      <div class="center">
+        <div class="details__description-long" data-ref="descLong"></div>
+      </div>
+      <div class="details__chart-wrapper">
+        <h2 class="details__chart-header">Price history</h2>
+        <div class="details__chart"></div>
+      </div>
+      <div class="details__vehicles-wrapper"></div>
+      <div class="center">
+        <button class="dialog_close fab" data-dialog-id="details" data-ref="close">Close</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- One matched datamine vehicle; cloned + populated by DetailsRenderer.buildVehicleCard -->
+  <template id="tpl-vehicle-card">
+    <div class="vehicle-card">
+      <div class="vehicle-card__header">
+        <h3 class="vehicle-card__title" data-ref="title"></h3>
+        <a class="vehicle-card__wiki" target="_blank" rel="noopener" data-ref="wiki">View on Wiki ↗</a>
+      </div>
+      <dl class="vehicle-card__stats" data-ref="stats"></dl>
+    </div>
+  </template>
+
   <dialog id="about">
     <div class="dialog__wrapper">
       <h1>About Warthunder.cheap</h1>
