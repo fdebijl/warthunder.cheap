@@ -81,14 +81,23 @@ export const getCurrentItems = async (
         break;
       }
 
-      clog.log('Clicking next page button and waiting for navigation', LOGLEVEL.DEBUG);
+      // The store fires same-document navigations on load, which can resolve waitForNavigation
+      // before the real page change after a click. Navigate to the link target directly instead.
+      const nextHref = await nextPage.evaluate((el) => (el as HTMLAnchorElement).href || null);
+      const navigationTimeout = slowMode ? 90_000 : 30_000;
+
+      clog.log(`Navigating to next page${nextHref ? ` ${nextHref}` : ' by clicking'}`, LOGLEVEL.DEBUG);
 
       // Be gentle on Gaijin's servers
       await milliseconds(1000);
-      await Promise.all([
-        nextPage.click(),
-        page.waitForNavigation({ waitUntil: 'networkidle2', timeout: slowMode ? 90_000 : 30_000 }),
-      ]).catch((error) => {
+      const navigation = nextHref
+        ? page.goto(nextHref, { waitUntil: 'networkidle2', timeout: navigationTimeout })
+        : Promise.all([
+          nextPage.click(),
+          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: navigationTimeout }),
+        ]);
+
+      await navigation.catch((error) => {
         if (slowMode) {
           clog.log('Waiting for navigation encountered a timeout, aborting pagination', LOGLEVEL.DEBUG);
         } else {
